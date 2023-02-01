@@ -1,10 +1,6 @@
-import eikon as ek
+APP_KEY                     = '022971ea1eb44687b0bcb92bad73c9b83ab08a9d'
+RDP_LOGIN                   = 'S2117163@bi.no'
+RDP_PASSWORD                = '4D9PZGtijLbTkkA'
+DEPLOYED_PLATFORM_HOST      = 'https://emea1-apps.platform.refinitiv.com/web/Apps/Homepage/'         # a.k.a ADS or TREP
+DEPLOYED_PLATFORM_USER_NAME = 'Morten Eriksen' # a.k.a DACS user name
 
-# Set the AppKey for the Eikon Data API
-ek.set_app_key('62297b98ae4947f2ac01401801b0c32a165a1053')
-
-# Retrieve data from the Eikon database
-data, _ = ek.get_data('AAPL.O', ['TR.Revenue',])
-
-# Print the data
-print(data)
