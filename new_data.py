@@ -8,11 +8,15 @@ ek.set_app_key('022971ea1eb44687b0bcb92bad73c9b83ab08a9d')
 isin = 'NO0005052605'
 
 # Use the Eikon Data API to retrieve the company data
-#data = ek.get_data(isin, ['TR.Revenue', 'TR.NetIncomeLoss'])
-data = ek.get_data(isin,fields=['TR.PriceClose', 'TR.F.DebtTot'], parameters={'SDate':'1990-01-01','EDate':'2022-12-31'}, debug=True)
-# Convert the data to a Pandas DataFrame
-df = pd.DataFrame(data)
+# data = ek.get_data(isin, ['TR.Revenue', 'TR.NetIncomeLoss'])
+df, err = ek.get_data(isin, fields=['TR.PriceClose', 'TR.F.DebtTot'],
+                   parameters={'SDate': '1990-01-01', 'EDate': '2022-12-31', "Frq": "Y"}, debug=True)
+
 
 # Print the DataFrame
-df.head()
+print(df.head(20))
 
+nordic_data = pd.read_excel("nordic_data_bonds.xlsx")
+list1 = nordic_data["Preferred RIC"].dropna().to_list()
+df2, _ =  ek.get_data(list1, fields=['TR.PriceClose', 'TR.F.DebtTot'],
+                   parameters={'SDate': '1990-01-01', 'EDate': '2022-12-31', "Frq": "Y"})
