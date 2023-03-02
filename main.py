@@ -19,6 +19,7 @@ dataf2['Date'] = pd.to_datetime(dataf2['Date'], format='%Y/%m/%d')
 # exclude rows with value 22, 52, 53 in the "NAICS Sector Code" column
 dataf2 = dataf2[~dataf2["NAICS Sector Code"].isin(['22', '52', '53'])]
 dataf2 = dataf2[~dataf2["Date"].isin(["NaT"])]
+dataf2 = dataf2[dataf2["Country of Exchange"].isin(['Norway', 'Sweden', 'Finland', 'Denmark'])]
 
 
 # Create new column for long-term debt/tot-debt
@@ -30,5 +31,6 @@ dataf2['Fiscal Year'] = dataf2['Date'].dt.year
 #print(dataf2)
 
 #sns.lmplot(dataf2['Total Debt Percentage of Total Equity'].groupby(dataf2['Country of Exchange']))
-chart = sns.barplot(x='Date', y='Long-Term Debt/Total Debt', hue= 'Country of Exchange', data=dataf2)
+chart = sns.barplot(x='Fiscal Year', y='Long-Term Debt/Total Debt', hue= 'Country of Exchange', data=dataf2)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=45)
 plt.pyplot.show()
