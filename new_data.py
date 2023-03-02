@@ -22,5 +22,5 @@ print(df3.count())
 
 
 ### Store data to csv file
-df3.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\gathered_data2.csv", index=False)
+df3.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\refinitivdata.csv", index=False)
 

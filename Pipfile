@@ -8,6 +8,7 @@ pandas = "*"
 eikon = "*"
 refinitiv-dataplatform = "*"
 refinitiv-data = "*"
+polars = "*"
 
 [dev-packages]
 

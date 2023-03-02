@@ -8,4 +8,4 @@ data4 = pd.read_parquet('capiq_Debt.parquet', engine='pyarrow')
 
 debt = data4[data4["gvkey"].isin(gvkeylist)]
 
-debt.to_parquet("/Users/kristin/PycharmProjects/Master/debt.parquet")
+debt.to_parquet("/Users/kristin/PycharmProjects/Master/capitaliq.parquet")
