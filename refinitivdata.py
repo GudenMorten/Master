@@ -21,15 +21,17 @@ refinitivdata = refinitivdata[~refinitivdata["NAICS Sector Code"].isin(['22', '5
 refinitivdata = refinitivdata[~refinitivdata["Date"].isin(["NaT"])]
 refinitivdata = refinitivdata[refinitivdata["Country of Exchange"].isin(['Norway', 'Sweden', 'Finland', 'Denmark'])]
 
-# Merging the gvisin dataset with the refinitivdata dataset to include gvkey as well as ISIN number
-refinitivdata_withgvkey= pd.merge(refinitivdata, gvisin, on='Instrument', how='left')
-
 # Create new column for long-term debt/tot-debt
 refinitivdata['Long-Term Debt/Total Debt'] = refinitivdata['Debt - Long-Term - Total'] / refinitivdata['Debt - Total']
 # Create short term debt and current long-term debt over total debt column
 refinitivdata['Short-Term Debt/Total Debt'] = refinitivdata['Short-Term Debt & Current Portion of Long-Term Debt'] / refinitivdata['Debt - Total']
 # Create a 'YEAR' column for easier use of plots
 refinitivdata['Fiscal Year'] = refinitivdata['Date'].dt.year
+
+# Merging the gvisin dataset with the refinitivdata dataset to include gvkey as well as ISIN number
+refinitivdata_withgvkey= pd.merge(refinitivdata, gvisin, on='Instrument', how='left')
+
+
 
 
 
