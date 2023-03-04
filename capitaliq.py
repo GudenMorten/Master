@@ -14,6 +14,7 @@ capitaliqquarterly = capitaliqquarterly[capitaliqquarterly["latestforfinancialpe
 capitaliqquarterly['periodenddate'] = capitaliqquarterly['periodenddate'].apply(lambda x: pd.to_datetime(str(int(x))))
 capitaliqquarterly['filingdate'] = capitaliqquarterly['filingdate'].apply(lambda x: pd.to_datetime(str(int(x))))
 
+
 # creating and fixing certain columns
 capitaliqquarterly['quarter'] = capitaliqquarterly['periodenddate'].dt.to_period('Q')
 capitaliqquarterly['quarternumb'] = capitaliqquarterly['periodenddate'].dt.to_period('Q').dt.quarter
@@ -23,12 +24,12 @@ capitaliqquarterly['gvkey'] = capitaliqquarterly['gvkey'].apply(lambda x: (int(x
 capitaliqannual = capitaliqquarterly[capitaliqquarterly['quarternumb'].isin([4])]
 
 capitaliqannual_summary = pl.from_pandas(
-    capitaliqannual[["year", "companyid", "capitalstructuresubtypeid", "dataitemvalue"]])
+    capitaliqannual[["year", "gvkey", "capitalstructuresubtypeid", "dataitemvalue"]])
 
 capitaliqannual_summary = capitaliqannual_summary.groupby(
     [
         "year",
-        "companyid",
+        "gvkey",
         "capitalstructuresubtypeid"
     ]
 ).agg(
@@ -37,17 +38,13 @@ capitaliqannual_summary = capitaliqannual_summary.groupby(
     ]
 )
 
-test = capitaliqannual_summary.pivot(
+capitalstructure_sorted = capitaliqannual_summary.pivot(
     values="Value",
-    index=["year", "companyid"],
+    index=["year", "gvkey"],
     columns="capitalstructuresubtypeid"
 ).to_pandas()
 
 
-capitaliqannual_summary = pd.DataFrame()
-capitaliqannual_summary['vifarsehvasomskjer'] = capitaliqannual \
-    .groupby(['year', 'companyid', 'capitalstructuresubtypeid'])["dataitemvalue"] \
-    .agg('sum')
 
 merged_data = pd.merge(capitaliqannual, gvisin, on='gvkey')
 # Created new dataframe for sum of quarterly debt payments

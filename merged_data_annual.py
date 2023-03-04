@@ -1,0 +1,1 @@
+merged_data_annual = refinitivdata.merge(capitalstructure_sorted, how='left', left_on=['gvkey','Fiscal Year'], right_on=['gvkey','year'])
