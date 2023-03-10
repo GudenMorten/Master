@@ -14,12 +14,28 @@ capitaliqquarterly = capitaliqquarterly[capitaliqquarterly["latestforfinancialpe
 capitaliqquarterly['periodenddate'] = capitaliqquarterly['periodenddate'].apply(lambda x: pd.to_datetime(str(int(x))))
 capitaliqquarterly['filingdate'] = capitaliqquarterly['filingdate'].apply(lambda x: pd.to_datetime(str(int(x))))
 
-
 # creating and fixing certain columns
 capitaliqquarterly['quarter'] = capitaliqquarterly['periodenddate'].dt.to_period('Q')
 capitaliqquarterly['quarternumb'] = capitaliqquarterly['periodenddate'].dt.to_period('Q').dt.quarter
 capitaliqquarterly['year'] = capitaliqquarterly['periodenddate'].dt.year
 capitaliqquarterly['gvkey'] = capitaliqquarterly['gvkey'].apply(lambda x: (int(x)))
+
+capitaliqquarterly.info()
+# define a function to adjust the dataitemvalue based on unittypeid
+
+def adjust_value(dataitemvalue, unittypeid):
+    if unittypeid == 1:
+        return dataitemvalue * 1000
+    elif unittypeid == 2:
+        return dataitemvalue * 1000000
+    else:
+        return dataitemvalue
+
+
+# apply the function to create a new column with adjusted values
+capitaliqquarterly['dataitemvalue'] = capitaliqquarterly.apply(lambda row: adjust_value(row['dataitemvalue'], row['unittypeid']), axis=1)
+
+
 
 capitaliqannual = capitaliqquarterly[capitaliqquarterly['quarternumb'].isin([4])]
 
@@ -43,8 +59,6 @@ capitalstructure_sorted = capitaliqannual_summary.pivot(
     index=["year", "gvkey"],
     columns="capitalstructuresubtypeid"
 ).to_pandas()
-
-
 
 merged_data = pd.merge(capitaliqannual, gvisin, on='gvkey')
 # Created new dataframe for sum of quarterly debt payments
