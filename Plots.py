@@ -146,6 +146,73 @@ chart_debt3denmark_total.set_xticklabels(chart_debt3denmark_total.get_xticklabel
 # Show the plot
 plt.pyplot.show()
 
+### PLOT 7 ###
+plot7_line_totaldebt = combined_dataset[['year', 'Country of Exchange', 'Debt - Total']]
+plot7_line_totaldebt_polar = pl.from_pandas(
+    plot7_line_totaldebt[['year', 'Country of Exchange', 'Debt - Total']])
+
+plot7_line_totaldebt_polar = plot7_line_totaldebt_polar.groupby(
+    [
+        'year', 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum('Debt - Total').alias('total debt')
+    ]
+).to_pandas()
+
+plot7_line_totaldebt = plot7_line_totaldebt_polar.set_index('year').sort_index(ascending=True)
+sns.lineplot(data=plot7_line_totaldebt, x=plot7_line_totaldebt.index, y='total debt', hue='Country of Exchange')
+
+plt.pyplot.show()
+
+### PLOT 8 ###
+plot8_line_longterm = combined_dataset[['year', 'Country of Exchange', 'Debt - Long-Term - Total', 'Debt - Total']]
+plot8_line_longterm_polar = pl.from_pandas(
+    plot8_line_longterm[['year', 'Country of Exchange', 'Debt - Long-Term - Total', 'Debt - Total']])
+
+plot8_line_longterm_polar = plot8_line_longterm_polar.groupby(
+    [
+        'year', 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum('Debt - Long-Term - Total').alias('Debt - Long-Term - Total'),
+        pl.sum('Debt - Total').alias('total debt')
+    ]
+).to_pandas()
+
+plot8_line_longterm = plot8_line_longterm_polar.set_index('year').sort_index(ascending=True)
+plot8_line_longterm['long term pct'] = plot8_line_longterm['Debt - Long-Term - Total']/plot8_line_longterm['total debt']
+plot8_line_longterm = plot8_line_longterm[['long term pct', 'Country of Exchange']]
+sns.lineplot(data=plot8_line_longterm, x=plot8_line_longterm.index, y='long term pct', hue='Country of Exchange')
+
+plt.pyplot.show()
+
+### PLOT 9 ###
+plot9_line_shortterm = combined_dataset[['year', 'Country of Exchange', 'Short-Term Debt & Current Portion of Long-Term Debt', 'Debt - Total']]
+plot9_line_shortterm_polar = pl.from_pandas(
+    plot9_line_shortterm[['year', 'Country of Exchange', 'Short-Term Debt & Current Portion of Long-Term Debt', 'Debt - Total']])
+
+plot9_line_shortterm_polar = plot9_line_shortterm_polar.groupby(
+    [
+        'year', 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum('Short-Term Debt & Current Portion of Long-Term Debt').alias('Short-Term Debt & Current Portion of Long-Term Debt'),
+        pl.sum('Debt - Total').alias('total debt')
+    ]
+).to_pandas()
+
+plot9_line_shortterm = plot9_line_shortterm_polar.set_index('year').sort_index(ascending=True)
+plot9_line_shortterm['short term debt pct'] = plot9_line_shortterm['Short-Term Debt & Current Portion of Long-Term Debt']/plot9_line_shortterm['total debt']
+plot9_line_shortterm = plot9_line_shortterm[['short term debt pct', 'Country of Exchange']].fillna(0)
+sns.lineplot(data=plot9_line_shortterm, x=plot9_line_shortterm.index, y='short term debt pct', hue='Country of Exchange')
+
+plt.pyplot.show()
+
+
 #### PLOT FOR BONDS ###
 df_plot_bonds_annual = combined_dataset[['Bonds and Notes', 'Fiscal Year', 'Country of Exchange']]
 df_plot_bonds_annual = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Finland', ['Bonds and Notes', 'Fiscal Year']]
