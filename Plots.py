@@ -55,30 +55,6 @@ chart_debt_totalpct.set_xticklabels(chart_debt_totalpct.get_xticklabels(), rotat
 # Show the plot
 plt.pyplot.show()
 
-
-### PLOT 3 FINLAND ###
-df_plot3finland_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
-df_plot3finland_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Finland', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
-df_plot3finland_debt_total_polar = pl.from_pandas(
-    df_plot3finland_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
-
-df_plot3finland_debt_total_polar = df_plot3finland_debt_total_polar.groupby(
-    [
-        'year'
-    ]
-).agg(
-    [
-        pl.sum("Short-Term Debt & Current Portion of Long-Term Debt").alias("short-term debt total"),
-        pl.sum('Debt - Long-Term - Total').alias('long-term debt total'),
-    ]
-).to_pandas()
-
-chart_debt3finland_total = df_plot3_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
-chart_debt3finland_total.set_xticklabels(chart_debt3finland_total.get_xticklabels(), rotation='vertical')
-
-# Show the plot
-plt.pyplot.show()
-
 ### PLOT 3 NORWAY ###
 df_plot3norway_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
 df_plot3norway_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Norway', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
@@ -96,18 +72,18 @@ df_plot3norway_debt_total_polar = df_plot3norway_debt_total_polar.groupby(
     ]
 ).to_pandas()
 
-chart_debt3norway_total = df_plot3_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
+chart_debt3norway_total = df_plot3norway_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
 chart_debt3norway_total.set_xticklabels(chart_debt3norway_total.get_xticklabels(), rotation='vertical')
 
 # Show the plot
 plt.pyplot.show()
-### PLOT 3 SWEDEN ###
-df_plot3sweden_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
-df_plot3sweden_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Sweden', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
-df_plot3sweden_debt_total_polar = pl.from_pandas(
-    df_plot3sweden_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
+### PLOT 4 SWEDEN ###
+df_plot4sweden_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
+df_plot4sweden_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Sweden', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
+df_plot4sweden_debt_total_polar = pl.from_pandas(
+    df_plot4sweden_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
 
-df_plot3sweden_debt_total_polar = df_plot3sweden_debt_total_polar.groupby(
+df_plot4sweden_debt_total_polar = df_plot4sweden_debt_total_polar.groupby(
     [
         'year'
     ]
@@ -118,18 +94,18 @@ df_plot3sweden_debt_total_polar = df_plot3sweden_debt_total_polar.groupby(
     ]
 ).to_pandas()
 
-chart_debt3sweden_total = df_plot3_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
-chart_debt3sweden_total.set_xticklabels(chart_debt3sweden_total.get_xticklabels(), rotation='vertical')
+chart_debt4sweden_total = df_plot4sweden_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
+chart_debt4sweden_total.set_xticklabels(chart_debt4sweden_total.get_xticklabels(), rotation='vertical')
 
 # Show the plot
 plt.pyplot.show()
-### PLOT 3 DENMARK ###
-df_plot3denmark_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
-df_plot3denmark_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Denmark', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
-df_plot3denmark_debt_total_polar = pl.from_pandas(
-    df_plot3denmark_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
+### PLOT 5 DENMARK ###
+df_plot5denmark_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
+df_plot5denmark_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Denmark', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
+df_plot5denmark_debt_total_polar = pl.from_pandas(
+    df_plot5denmark_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
 
-df_plot3denmark_debt_total_polar = df_plot3denmark_debt_total_polar.groupby(
+df_plot5denmark_debt_total_polar = df_plot5denmark_debt_total_polar.groupby(
     [
         'year'
     ]
@@ -140,11 +116,36 @@ df_plot3denmark_debt_total_polar = df_plot3denmark_debt_total_polar.groupby(
     ]
 ).to_pandas()
 
-chart_debt3denmark_total = df_plot3_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
-chart_debt3denmark_total.set_xticklabels(chart_debt3denmark_total.get_xticklabels(), rotation='vertical')
+chart_debt5denmark_total = df_plot5denmark_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
+chart_debt5denmark_total.set_xticklabels(chart_debt5denmark_total.get_xticklabels(), rotation='vertical')
 
 # Show the plot
 plt.pyplot.show()
+
+
+### PLOT 6 FINLAND ###
+df_plot6finland_debt_total = combined_dataset[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year', 'Country of Exchange']]
+df_plot6finland_debt_total = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Finland', ['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']]
+df_plot6finland_debt_total_polar = pl.from_pandas(
+    df_plot6finland_debt_total[['Debt - Long-Term - Total', 'Short-Term Debt & Current Portion of Long-Term Debt', 'year']])
+
+df_plot6finland_debt_total_polar = df_plot6finland_debt_total_polar.groupby(
+    [
+        'year'
+    ]
+).agg(
+    [
+        pl.sum("Short-Term Debt & Current Portion of Long-Term Debt").alias("short-term debt total"),
+        pl.sum('Debt - Long-Term - Total').alias('long-term debt total'),
+    ]
+).to_pandas()
+
+chart_debt6finland_total = df_plot6finland_debt_total_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
+chart_debt6finland_total.set_xticklabels(chart_debt6finland_total.get_xticklabels(), rotation='vertical')
+
+ #Show the plot
+plt.pyplot.show()
+
 
 ### PLOT 7 ###
 plot7_line_totaldebt = combined_dataset[['year', 'Country of Exchange', 'Debt - Total']]
@@ -212,6 +213,154 @@ sns.lineplot(data=plot9_line_shortterm, x=plot9_line_shortterm.index, y='short t
 
 plt.pyplot.show()
 
+
+### PLOT 10 ALL COUNTRIES ###
+
+df_plot10 = combined_dataset[['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred" ]]
+df_plot10_polar = pl.from_pandas(
+    df_plot10[['Term Loans','Bonds and Notes','Revolving Credit','Other Borrowings', 'Capital Lease', 'Commercial Paper', 'Trust Preferred', "Fiscal Year"]])
+
+df_plot10_polar = df_plot10_polar.groupby(
+    [
+        "Fiscal Year"
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Total"),
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Total"),
+        pl.sum("Revolving Credit").alias("Revolving Credit Total"),
+        pl.sum("Other Borrowings").alias("Other Borrowings Total"),
+        pl.sum("Capital Lease").alias("Capital Lease Total"),
+        pl.sum("Commercial Paper").alias("Commercial Paper Total"),
+        pl.sum("Trust Preferred").alias("Trust Preferred Total")
+    ]
+).to_pandas()
+
+df_plot10_polar = df_plot10_polar.set_index('Fiscal Year')
+chart_totaldebt_on_country = sns.lineplot(data=df_plot10_polar)
+chart_totaldebt_on_country.set_xticklabels(chart_totaldebt_on_country.get_xticklabels(), rotation=45)
+chart_totaldebt_on_country #.set_ylim(0,400000000)
+plt.pyplot.show()
+
+### PLOT 11 NORWAY ###
+
+df_plot11 = combined_dataset[['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred", "Country of Exchange" ]]
+df_plot11 = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Norway', ['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred"]]
+df_plot11_polar = pl.from_pandas(
+    df_plot11[['Term Loans','Bonds and Notes','Revolving Credit','Other Borrowings', 'Capital Lease', 'Commercial Paper', 'Trust Preferred', "Fiscal Year"]])
+
+df_plot11_polar = df_plot11_polar.groupby(
+    [
+        "Fiscal Year"
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Total"),
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Total"),
+        pl.sum("Revolving Credit").alias("Revolving Credit Total"),
+        pl.sum("Other Borrowings").alias("Other Borrowings Total"),
+        pl.sum("Capital Lease").alias("Capital Lease Total"),
+        pl.sum("Commercial Paper").alias("Commercial Paper Total"),
+        pl.sum("Trust Preferred").alias("Trust Preferred Total")
+    ]
+).to_pandas()
+
+df_plot11_polar = df_plot11_polar.set_index('Fiscal Year')
+chart_totaldebt_on_country = sns.lineplot(data=df_plot11_polar)
+chart_totaldebt_on_country.set_xticklabels(chart_totaldebt_on_country.get_xticklabels(), rotation=45)
+chart_totaldebt_on_country #.set_ylim(0,400000000)
+plt.pyplot.show()
+
+## PLOT 12 SWEDEN ###
+
+df_plot12 = combined_dataset[['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred", "Country of Exchange" ]]
+df_plot12 = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Sweden', ['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred"]]
+df_plot12_polar = pl.from_pandas(
+    df_plot12[['Term Loans','Bonds and Notes','Revolving Credit','Other Borrowings', 'Capital Lease', 'Commercial Paper', 'Trust Preferred', "Fiscal Year"]])
+
+df_plot12_polar = df_plot12_polar.groupby(
+    [
+        "Fiscal Year"
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Total"),
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Total"),
+        pl.sum("Revolving Credit").alias("Revolving Credit Total"),
+        pl.sum("Other Borrowings").alias("Other Borrowings Total"),
+        pl.sum("Capital Lease").alias("Capital Lease Total"),
+        pl.sum("Commercial Paper").alias("Commercial Paper Total"),
+        pl.sum("Trust Preferred").alias("Trust Preferred Total")
+    ]
+).to_pandas()
+
+df_plot12_polar = df_plot12_polar.set_index('Fiscal Year')
+chart_totaldebt_on_country = sns.lineplot(data=df_plot12_polar)
+chart_totaldebt_on_country.set_xticklabels(chart_totaldebt_on_country.get_xticklabels(), rotation=45)
+chart_totaldebt_on_country #.set_ylim(0,400000000)
+plt.pyplot.show()
+
+## PLOT 13 DENMARK ###
+
+df_plot13 = combined_dataset[['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred", "Country of Exchange" ]]
+df_plot13 = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Denmark', ['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred"]]
+df_plot13_polar = pl.from_pandas(
+    df_plot13[['Term Loans','Bonds and Notes','Revolving Credit','Other Borrowings', 'Capital Lease', 'Commercial Paper', 'Trust Preferred', "Fiscal Year"]])
+
+df_plot13_polar = df_plot13_polar.groupby(
+    [
+        "Fiscal Year"
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Total"),
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Total"),
+        pl.sum("Revolving Credit").alias("Revolving Credit Total"),
+        pl.sum("Other Borrowings").alias("Other Borrowings Total"),
+        pl.sum("Capital Lease").alias("Capital Lease Total"),
+        pl.sum("Commercial Paper").alias("Commercial Paper Total"),
+        pl.sum("Trust Preferred").alias("Trust Preferred Total")
+    ]
+).to_pandas()
+
+df_plot13_polar = df_plot13_polar.set_index('Fiscal Year')
+chart_totaldebt_on_country = sns.lineplot(data=df_plot13_polar)
+chart_totaldebt_on_country.set_xticklabels(chart_totaldebt_on_country.get_xticklabels(), rotation=45)
+chart_totaldebt_on_country #.set_ylim(0,400000000)
+plt.pyplot.show()
+
+## PLOT 14 FINLAND ###
+
+df_plot14 = combined_dataset[['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred", "Country of Exchange" ]]
+df_plot14 = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Finland', ['Fiscal Year', 'Bonds and Notes', "Term Loans", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper", "Trust Preferred"]]
+df_plot14_polar = pl.from_pandas(
+    df_plot14[['Term Loans','Bonds and Notes','Revolving Credit','Other Borrowings', 'Capital Lease', 'Commercial Paper', 'Trust Preferred', "Fiscal Year"]])
+
+df_plot14_polar = df_plot14_polar.groupby(
+    [
+        "Fiscal Year"
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Total"),
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Total"),
+        pl.sum("Revolving Credit").alias("Revolving Credit Total"),
+        pl.sum("Other Borrowings").alias("Other Borrowings Total"),
+        pl.sum("Capital Lease").alias("Capital Lease Total"),
+        pl.sum("Commercial Paper").alias("Commercial Paper Total"),
+        pl.sum("Trust Preferred").alias("Trust Preferred Total")
+    ]
+).to_pandas()
+
+df_plot14_polar = df_plot14_polar.set_index('Fiscal Year')
+chart_totaldebt_on_country = sns.lineplot(data=df_plot14_polar)
+chart_totaldebt_on_country.set_xticklabels(chart_totaldebt_on_country.get_xticklabels(), rotation=45)
+chart_totaldebt_on_country #.set_ylim(0,400000000)
+plt.pyplot.show()
+
+
+chart_debt_totalpct = df_plot2_debt_totalpct_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
+chart_debt_totalpct.set_xticklabels(chart_debt_totalpct.get_xticklabels(), rotation='vertical')
 
 #### PLOT FOR BONDS ###
 df_plot_bonds_annual = combined_dataset[['Bonds and Notes', 'Fiscal Year', 'Country of Exchange']]
