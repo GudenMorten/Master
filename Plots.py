@@ -362,6 +362,163 @@ plt.pyplot.show()
 chart_debt_totalpct = df_plot2_debt_totalpct_polar.set_index('year').sort_index(ascending=True).plot(kind='bar', stacked=True)
 chart_debt_totalpct.set_xticklabels(chart_debt_totalpct.get_xticklabels(), rotation='vertical')
 
+### PLOT 15 ###
+
+df_plot15 = combined_dataset[['year', 'Bonds and Notes', 'Country of Exchange']]
+df_plot15_polar = pl.from_pandas(
+    df_plot15[['year', 'Bonds and Notes', 'Country of Exchange']])
+
+df_plot15 = df_plot15_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Bonds and Notes").alias("Bonds and Notes Annually")
+    ]
+).to_pandas()
+
+df_plot15 = df_plot15.set_index('year')
+df_plot15 = df_plot15.fillna(0)
+chart15 = sns.lineplot(data=df_plot15, x=df_plot15.index, y='Bonds and Notes Annually', hue='Country of Exchange')
+chart15.set_xticklabels(chart15.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+### PLOT 16 ###
+
+df_plot16 = combined_dataset[['year', "Term Loans", 'Country of Exchange' ]]
+df_plot16_polar = pl.from_pandas(
+    df_plot16[['year', "Term Loans", 'Country of Exchange']])
+
+df_plot16 = df_plot16_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Term Loans").alias("Term Loans Annually")
+    ]
+).to_pandas()
+
+df_plot16 = df_plot16.set_index('year')
+df_plot16 = df_plot16.fillna(0)
+chart16 = sns.lineplot(data=df_plot16, x=df_plot16.index, y='Term Loans Annually', hue='Country of Exchange')
+chart16.set_xticklabels(chart16.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+### PLOT 17 ###
+
+df_plot17 = combined_dataset[['year', "Revolving Credit", 'Country of Exchange' ]]
+df_plot17_polar = pl.from_pandas(
+    df_plot17[['year', "Revolving Credit", 'Country of Exchange']])
+
+df_plot17 = df_plot17_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Revolving Credit").alias("Revolving Credit Annually")
+    ]
+).to_pandas()
+
+df_plot17 = df_plot17.set_index('year')
+df_plot17 = df_plot17.fillna(0)
+chart17 = sns.lineplot(data=df_plot17, x=df_plot17.index, y='Revolving Credit Annually', hue='Country of Exchange')
+chart17.set_xticklabels(chart17.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+
+### PLOT 18 ###
+
+df_plot18 = combined_dataset[['year', "Other Borrowings", 'Country of Exchange' ]]
+df_plot18_polar = pl.from_pandas(
+    df_plot18[['year', "Other Borrowings", 'Country of Exchange']])
+
+df_plot18 = df_plot18_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Other Borrowings").alias("Other Borrowings Annually")
+    ]
+).to_pandas()
+
+df_plot18 = df_plot18.set_index('year')
+df_plot18 = df_plot18.fillna(0)
+chart18 = sns.lineplot(data=df_plot18, x=df_plot18.index, y='Other Borrowings Annually', hue='Country of Exchange')
+chart18.set_xticklabels(chart18.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+
+### PLOT 19 ###
+
+df_plot19 = combined_dataset[['year', "Capital Lease", 'Country of Exchange' ]]
+df_plot19_polar = pl.from_pandas(
+    df_plot19[['year', "Capital Lease", 'Country of Exchange']])
+
+df_plot19 = df_plot19_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Capital Lease").alias("Capital Lease Annually")
+    ]
+).to_pandas()
+
+df_plot19 = df_plot19.set_index('year')
+df_plot19 = df_plot19.fillna(0)
+chart19 = sns.lineplot(data=df_plot19, x=df_plot19.index, y='Capital Lease Annually', hue='Country of Exchange')
+chart19.set_xticklabels(chart19.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+### PLOT 20 ###
+
+df_plot20 = combined_dataset[['year', "Commercial Paper", 'Country of Exchange' ]]
+df_plot20_polar = pl.from_pandas(
+    df_plot20[['year', "Commercial Paper", 'Country of Exchange']])
+
+df_plot20 = df_plot20_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Commercial Paper").alias("Commercial Paper Annually")
+    ]
+).to_pandas()
+
+df_plot20 = df_plot20.set_index('year')
+df_plot20 = df_plot20.fillna(0)
+chart20 = sns.lineplot(data=df_plot20, x=df_plot20.index, y='Commercial Paper Annually', hue='Country of Exchange')
+chart20.set_xticklabels(chart20.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
+
+### PLOT 21 ###
+
+df_plot21 = combined_dataset[['year', "Trust Preferred", 'Country of Exchange' ]]
+df_plot21_polar = pl.from_pandas(
+    df_plot21[['year', "Trust Preferred", 'Country of Exchange']])
+
+df_plot21 = df_plot21_polar.groupby(
+    [
+        "year", 'Country of Exchange'
+    ]
+).agg(
+    [
+        pl.sum("Trust Preferred").alias("Trust Preferred Annually")
+    ]
+).to_pandas()
+
+df_plot21 = df_plot21.set_index('year')
+df_plot21 = df_plot21.fillna(0)
+chart21 = sns.lineplot(data=df_plot21, x=df_plot21.index, y='Trust Preferred Annually', hue='Country of Exchange')
+chart21.set_xticklabels(chart21.get_xticklabels(), rotation=45)
+plt.pyplot.show()
+
 #### PLOT FOR BONDS ###
 df_plot_bonds_annual = combined_dataset[['Bonds and Notes', 'Fiscal Year', 'Country of Exchange']]
 df_plot_bonds_annual = combined_dataset.loc[combined_dataset['Country of Exchange'] == 'Finland', ['Bonds and Notes', 'Fiscal Year']]
