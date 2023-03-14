@@ -14,13 +14,13 @@ df3, _ = ek.get_data(list1, fields=['TR.CommonName', 'TR.F.STDebtCurrPortOfLTDeb
                                     'TR.NAICSNationalIndustryCode', 'TR.NAICSNationalIndustry',
                                     'TR.NAICSIndustryGroupCode', 'TR.NAICSIndustryGroup', 'TR.ExchangeCountry',
                                     'TR.ExchangeName', 'TR.F.TotDebtPctofTotEq', 'TR.F.DebtLTTot', 'TR.F.DebtTot',
-                                    'TR.WACCCostofDebt'
+                                    'TR.WACCCostofDebt', 'TR.F.MktCap', 'TR.F.NetIncAfterTax', 'TR.F.TotShHoldEq'
                                     ],
-                     parameters={'SDate': '1990-01-01', 'EDate': '2023-02-15', "Frq": "FY"})
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY"})
 
 print(df3.count())
 
 
 ### Store data to csv file
-df3.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\refinitivdata.csv", index=False)
+df3.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\refinitivdata2.csv", index=False)
 

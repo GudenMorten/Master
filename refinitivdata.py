@@ -2,16 +2,16 @@ import pandas as pd
 import seaborn as sns
 import matplotlib as plt
 
-refinitivdata = pd.read_csv('refinitivdata.csv')
+refinitivdata = pd.read_csv('refinitivdata2.csv')
 
 # fixing the dataframe
 refinitivdata[['Company Common Name', 'NAICS Sector Code', 'NAICS Sector Name',
     'NAICS Subsector Code', 'NAICS Subsector Name', 'NAICS National Industry Code',
     'NAICS National Industry Name', 'NAICS Industry Group Code', 'NAICS Industry Group Name',
-    'Country of Exchange', 'Exchange Name']] = refinitivdata.groupby('Instrument')[['Company Common Name', 'NAICS Sector Code',
+    'Country of Exchange', 'Exchange Name', 'Market Capitalization', 'Net Income after Tax', "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]] = refinitivdata.groupby('Instrument')[['Company Common Name', 'NAICS Sector Code',
     'NAICS Sector Name', 'NAICS Subsector Code', 'NAICS Subsector Name', 'NAICS National Industry Code',
     'NAICS National Industry Name', 'NAICS Industry Group Code', 'NAICS Industry Group Name',
-    'Country of Exchange', 'Exchange Name']].fillna(method='ffill')
+    'Country of Exchange', 'Exchange Name', 'Market Capitalization', 'Net Income after Tax', "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]].fillna(method='ffill')
 
 # make the Date column accessible with date format
 refinitivdata['Date'] = pd.to_datetime(refinitivdata['Date'], format='%Y/%m/%d')
@@ -27,21 +27,12 @@ refinitivdata['Long-Term Debt/Total Debt'] = refinitivdata['Debt - Long-Term - T
 refinitivdata['Short-Term Debt/Total Debt'] = refinitivdata['Short-Term Debt & Current Portion of Long-Term Debt'] / refinitivdata['Debt - Total']
 # Create a 'YEAR' column for easier use of plots
 refinitivdata['Fiscal Year'] = refinitivdata['Date'].dt.year
+refinitivdata['ROE'] = refinitivdata['Net Income after Tax']/refinitivdata["Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]
 
 # Merging the gvisin dataset with the refinitivdata dataset to include gvkey as well as ISIN number
 refinitivdata_withgvkey= pd.merge(refinitivdata, gvisin, on='Instrument', how='left')
 
 
-
-
-
-
-
-#chart = sns.barplot(x='Fiscal Year', y='Long-Term Debt/Total Debt', hue= 'Country of Exchange', data=refinitivdata)
-#chart.set_xticklabels(chart.get_xticklabels(), rotation=45)
-#plt.pyplot.show()
-
-#refinitivdata.dropna(subset=['Fiscal Year'], inplace=True)
 
 # merging refinitivdata_withgvkey with capitalstructure_sorted
 combined_dataset = pd.merge(refinitivdata_withgvkey, capitalstructure_sorted, left_on=['gvkey','Fiscal Year'], right_on=['gvkey', 'year'], how='right')
