@@ -1,11 +1,20 @@
 import pandas as pd
-# import pylab as pl
+import polars as pl
 import seaborn as sns
 import matplotlib as plt
-from polars.polars import cols
+from matplotlib import cm
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import numpy as np
 
 refinitivdata = pd.read_csv('refinitivdata2.csv')
-
+refinitivdata3 = pd.read_csv('refinitivdata3.csv')
+refinitivdata3 = refinitivdata3.merge(gvisin, on='Instrument')
+refinitivdata = refinitivdata.merge(gvisin, on='Instrument')
+refinitivdata3 = refinitivdata3[['Instrument', 'Earnings Per Share - Mean', 'Common Shares - Outstanding - Total - '
+                                                                            'Ord/DR/CPO', 'Price Close',
+                                 'Total Assets', 'Total Current Assets', 'Total Current Liabilities', 'gvkey']]
+refinitivdata = refinitivdata.merge(refinitivdata3, on='gvkey')
 # fixing the dataframe
 refinitivdata[['Company Common Name', 'NAICS Sector Code', 'NAICS Sector Name',
                'NAICS Subsector Code', 'NAICS Subsector Name', 'NAICS National Industry Code',
@@ -17,6 +26,11 @@ refinitivdata[['Company Common Name', 'NAICS Sector Code', 'NAICS Sector Name',
      'NAICS National Industry Name', 'NAICS Industry Group Code', 'NAICS Industry Group Name',
      'Country of Exchange', 'Exchange Name', 'Market Capitalization', 'Net Income after Tax',
      "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]].fillna(method='ffill')
+
+refinitivdata3[['Company Common Name']] = refinitivdata3.groupby('Instrument')[['Company Common Name']].fillna(
+    method='ffill')
+
+# merge data with extra data we needed
 
 # make the Date column accessible with date format
 refinitivdata['Date'] = pd.to_datetime(refinitivdata['Date'], format='%Y/%m/%d')
@@ -88,7 +102,6 @@ combined_dataset['Total debt relative'] = combined_dataset[
      'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
      'Trust Preferred/Total Debt']].fillna(0).sum(axis=1)
 
-
 debt_specialization = combined_dataset[
     ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
      'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
@@ -127,24 +140,153 @@ combined_dataset['Unique debts'] = combined_dataset[
     ["Term Loans", "Bonds and Notes", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper",
      "Trust Preferred"]].apply(lambda x: sum(x != 0), axis=1)
 
-
 ########### Herfindahl Index #############
-def HHI(df):
-    RC = df['Revolving Credit']
-    TL = df['Term Loans']
-    BN = df['Bonds and Notes']
-    CL = df['Capital Lease']
-    CP = df['Commercial Paper']
-    TP = df['Trust Preferred']
-    OTHER = df['Other Borrowings']
-    df['TD'] = df[[RC, TL, BN, CL, CP, TP, OTHER]].sum(axis=1)
+combined_dataset['TD'] = combined_dataset[
+    ["Term Loans", "Bonds and Notes", "Revolving Credit", "Other Borrowings", "Capital Lease", "Commercial Paper",
+     "Trust Preferred"]].sum(axis=1)
 
-    df['SS'] = (df[RC] / df['TD']) ** 2 + (df[TL] / df['TD']) ** 2 + \
-               (df[BN] / df['TD']) ** 2 + (df[CL] / df['TD']) ** 2 + \
-               (df[CP] / df['TD']) ** 2 + (df[TP] / df['TD']) ** 2 + \
-               (df[OTHER] / df['TD']) ** 2
+combined_dataset['SS'] = (combined_dataset['Revolving Credit'] / combined_dataset['TD']) ** 2 + (
+        combined_dataset['Term Loans'] / combined_dataset['TD']) ** 2 + \
+                         (combined_dataset['Bonds and Notes'] / combined_dataset['TD']) ** 2 + (
+                                 combined_dataset['Capital Lease'] / combined_dataset['TD']) ** 2 + \
+                         (combined_dataset['Commercial Paper'] / combined_dataset['TD']) ** 2 + (
+                                 combined_dataset['Trust Preferred'] / combined_dataset['TD']) ** 2 + \
+                         (combined_dataset['Other Borrowings'] / combined_dataset['TD']) ** 2
+combined_dataset['HHI'] = (combined_dataset['SS'] - (1 / 7)) / (1 - (1 / 7))
 
-    # Calculate HHI
-    df['HHI'] = (df['SS'] - (1 / 7)) / (1 - (1 / 7))
+### HHI aggregated on years ###
+HHI_annual = combined_dataset[['HHI', 'year']].groupby(['year']).mean().transpose()
 
-HHI(combined_dataset)
+
+### Debt specialization dummy ###
+def ds90(df):
+    df['DS90 dummy'] = 0
+    df.loc[(df['Revolving Credit/Total Debt'] >= 0.9) | (df['Bonds and Notes/Total Debt'] >= 0.9) | (
+            df['Term Loans/Total Debt'] >= 0.9) | (df['Commercial Paper/Total Debt'] >= 0.9) | (
+                   df['Other Borrowings/Total Debt'] >= 0.9) | (df['Capital Lease/Total Debt'] >= 0.9) | (
+                   df['Trust Preferred/Total Debt'] >= 0.9), 'DS90 dummy'] = 1
+
+
+ds90(combined_dataset)
+
+## annualizing ds90 ##
+DS90_annual = combined_dataset[['DS90 dummy', 'year']].groupby('year').mean().transpose()
+
+## combining DS90, HHI_annual and Debt specs into 1 dataframe ##
+debttypes_and_debtspecs_over_time = pd.concat([debt_specialization_polar, HHI_annual, DS90_annual]).drop('Total',
+                                                                                                         axis=0)
+
+######
+combined_dataset['lbmcap'] = combined_dataset['Market Capitalization'].apply(lambda x: np.log(x))
+## CLUSTER ANALYSIS ##
+scatterdata = combined_dataset.copy()
+
+## creating a subplot of scatterdata to find patterns for the clusters
+clusterpatterns = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt',
+                               'Trust Preferred/Total Debt']]
+# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Sweden', 1)
+# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Norway', 2)
+# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Denmark', 3)
+# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Finland', 4)
+clusterpatterns = clusterpatterns.replace([np.inf, -np.inf], np.nan).fillna(0)
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(clusterpatterns)
+print(clusterpatterns.describe())
+
+kmeans = KMeans(n_clusters=2, init='k-means++')
+kmeans.fit(data_scaled)
+kmeans.inertia_
+
+SSE = []
+for cluster in range(1, 20):
+    kmeans = KMeans(n_clusters=cluster, init='k-means++')
+    kmeans.fit(data_scaled)
+    SSE.append(kmeans.inertia_)
+
+frame = pd.DataFrame({'Cluster': range(1, 20), 'SSE': SSE})
+plt.pyplot.plot(frame['Cluster'], frame['SSE'], marker='o')
+plt.pyplot.show()
+
+kmeans = KMeans(n_clusters=7, init='k-means++')
+kmeans.fit(data_scaled)
+pred = kmeans.predict(data_scaled)
+
+frame = pd.DataFrame(data_scaled)
+frame['Cluster'] = pred
+print(frame['Cluster'].value_counts())
+
+scatterdata.reset_index(inplace=True)
+scatterdata['clusters'] = frame['Cluster']
+
+#### convert to polar ####
+scatterdata_polar = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
+                                 'Commercial Paper/Total Debt', 'Trust Preferred/Total Debt', 'clusters', 'HHI',
+                                 'Market Capitalization', 'ROE']]
+scatterdata_polar = polars.from_pandas(scatterdata_polar[
+                                           ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+                                            'Revolving Credit/Total Debt',
+                                            'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
+                                            'Commercial Paper/Total Debt',
+                                            'Trust Preferred/Total Debt', 'clusters', 'HHI', 'Market Capitalization',
+                                            'ROE']])
+
+scatterdata_polar = scatterdata_polar.groupby(
+    [
+        'clusters'
+    ]
+).agg(
+    [
+        pl.mean('Term Loans/Total Debt'),
+        pl.mean('Bonds and Notes/Total Debt'),
+        pl.mean('Revolving Credit/Total Debt'),
+        pl.mean('Other Borrowings/Total Debt'),
+        pl.mean('Capital Lease/Total Debt'),
+        pl.mean('Commercial Paper/Total Debt'),
+        pl.mean('Trust Preferred/Total Debt'),
+        pl.mean('HHI'),
+        pl.mean('Market Capitalization'),
+        pl.mean('ROE')
+    ]
+).to_pandas()
+scatterdata_polar.set_index('clusters', inplace=True)
+scatterdata_polar.sort_index(ascending=True, inplace=True)
+
+datafor3d = scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt',
+                               'Trust Preferred/Total Debt']]
+##### prøver å lage 3d chart av clusteringen
+result = np.array(datafor3d)
+colors = ['r', 'b', 'g', 'y', 'b', 'p', 'o']
+fig = plt.pyplot.figure(figsize=(8, 8), dpi=250)
+ax1 = fig.add_subplot(111, projection='3d')
+ax1.set_ylabel('Cluster', labelpad=10)
+ax1.set_zlabel('Percentage DS')
+xlabels = np.array(['Term Loans', 'Bonds and Notes', 'Revolving Credit',
+                    'Other Borrowings', 'Capital Lease', 'Commercial Paper',
+                    'Trust Preferred'])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['0', '1', '2', '3', '4', '5', '6'])
+ypos = np.arange(ylabels.shape[0])
+
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+zpos = result
+zpos = zpos.ravel()
+
+dx = 0.5
+dy = 0.5
+dz = zpos
+
+ax1.xaxis.set_ticks(xpos + dx / 2.)
+plt.pyplot.xticks(rotation=45)
+ax1.xaxis.set_ticklabels(xlabels)
+
+ax1.yaxis.set_ticks(ypos + dy / 2.)
+ax1.yaxis.set_ticklabels(ylabels)
+
+values = np.linspace(0.2, 1., xposM.ravel().shape[0])
+colors = cm.rainbow(values)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz * 0, dx, dy, dz, color=colors)
+plt.pyplot.show()

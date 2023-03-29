@@ -9,6 +9,7 @@ eikon = "*"
 refinitiv-dataplatform = "*"
 refinitiv-data = "*"
 polars = "*"
+scikit-learn = "*"
 
 [dev-packages]
 
