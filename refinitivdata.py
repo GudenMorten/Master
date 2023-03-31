@@ -7,28 +7,25 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 
-refinitivdata = pd.read_csv('refinitivdata2.csv')
-refinitivdata3 = pd.read_csv('refinitivdata3.csv')
-refinitivdata3 = refinitivdata3.merge(gvisin, on='Instrument')
-refinitivdata = refinitivdata.merge(gvisin, on='Instrument')
-refinitivdata3 = refinitivdata3[['Instrument', 'Earnings Per Share - Mean', 'Common Shares - Outstanding - Total - '
-                                                                            'Ord/DR/CPO', 'Price Close',
-                                 'Total Assets', 'Total Current Assets', 'Total Current Liabilities', 'gvkey']]
-refinitivdata = refinitivdata.merge(refinitivdata3, on='gvkey')
+refinitivdata = pd.read_csv('refinitivdata4.csv')
+assetsusd =  pd.read_csv('assetsusd.csv')
+new_column_names = {'Instrument': 'Instrument', 'Total Assets': 'Total Assets USD', 'Date': 'Date'}
+assetsusd = assetsusd.rename(columns=new_column_names)
+assetsusd = assetsusd.drop_duplicates(subset=['Instrument', 'Date'])
+refinitivdata = refinitivdata.drop_duplicates(subset=['Instrument', 'Date'])
+refinitivdata = pd.merge(refinitivdata, assetsusd, on=['Instrument', 'Date'])
 # fixing the dataframe
-refinitivdata[['Company Common Name', 'NAICS Sector Code', 'NAICS Sector Name',
-               'NAICS Subsector Code', 'NAICS Subsector Name', 'NAICS National Industry Code',
-               'NAICS National Industry Name', 'NAICS Industry Group Code', 'NAICS Industry Group Name',
-               'Country of Exchange', 'Exchange Name', 'Market Capitalization', 'Net Income after Tax',
+refinitivdata[['Company Common Name', 'NAICS Sector Code',
+               'NAICS Subsector Code',  'NAICS National Industry Code',
+                'NAICS Industry Group Code',
+               'Country of Exchange',  'Market Capitalization', 'Net Income after Tax',
                "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]] = refinitivdata.groupby('Instrument')[
     ['Company Common Name', 'NAICS Sector Code',
-     'NAICS Sector Name', 'NAICS Subsector Code', 'NAICS Subsector Name', 'NAICS National Industry Code',
-     'NAICS National Industry Name', 'NAICS Industry Group Code', 'NAICS Industry Group Name',
-     'Country of Exchange', 'Exchange Name', 'Market Capitalization', 'Net Income after Tax',
-     "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]].fillna(method='ffill')
+               'NAICS Subsector Code',  'NAICS National Industry Code',
+                'NAICS Industry Group Code',
+               'Country of Exchange',  'Market Capitalization', 'Net Income after Tax',
+               "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]].fillna(method='ffill')
 
-refinitivdata3[['Company Common Name']] = refinitivdata3.groupby('Instrument')[['Company Common Name']].fillna(
-    method='ffill')
 
 # merge data with extra data we needed
 
@@ -218,19 +215,23 @@ print(frame['Cluster'].value_counts())
 
 scatterdata.reset_index(inplace=True)
 scatterdata['clusters'] = frame['Cluster']
+### adding Market Leverage, Liquidity and Size to  the scatterdata dataset
+scatterdata['MV Equity'] = scatterdata['Price Close'] * scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO']
+scatterdata['Market Leverage'] = scatterdata['Debt - Total'] / (scatterdata['Debt - Total'] + scatterdata['MV Equity'])
+scatterdata['Liquidity'] = scatterdata['Total Current Assets'] / scatterdata['Total Current Liabilities']
+scatterdata['Size'] = scatterdata['Total Assets USD']
 
+## Include only Scatterdata that has observations for Common Shares, Total Assets, Current Assets, Current Liabilities
+##scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO'] = scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO'].drop(if)
 #### convert to polar ####
 scatterdata_polar = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
                                  'Commercial Paper/Total Debt', 'Trust Preferred/Total Debt', 'clusters', 'HHI',
-                                 'Market Capitalization', 'ROE']]
-scatterdata_polar = polars.from_pandas(scatterdata_polar[
-                                           ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
-                                            'Revolving Credit/Total Debt',
-                                            'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
-                                            'Commercial Paper/Total Debt',
-                                            'Trust Preferred/Total Debt', 'clusters', 'HHI', 'Market Capitalization',
-                                            'ROE']])
+                                 'Market Capitalization', 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']]
+scatterdata_polar = pl.from_pandas(scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+                                 'Revolving Credit/Total Debt', 'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
+                                 'Commercial Paper/Total Debt', 'Trust Preferred/Total Debt', 'clusters', 'HHI',
+                                 'Market Capitalization', 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']])
 
 scatterdata_polar = scatterdata_polar.groupby(
     [
@@ -247,7 +248,10 @@ scatterdata_polar = scatterdata_polar.groupby(
         pl.mean('Trust Preferred/Total Debt'),
         pl.mean('HHI'),
         pl.mean('Market Capitalization'),
-        pl.mean('ROE')
+        pl.mean('ROE'),
+        pl.mean('Market Leverage'),
+        pl.mean('Liquidity'),
+        pl.mean('Size')
     ]
 ).to_pandas()
 scatterdata_polar.set_index('clusters', inplace=True)
