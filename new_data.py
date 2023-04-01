@@ -24,13 +24,13 @@ df5, _ = ek.get_data(list2, fields=['TR.CommonName', 'TR.F.STDebtCurrPortOfLTDeb
 
 print(df5.count())
 
-datatest, _ = ek.get_data(list1, fields=['TR.F.TotAssets', 'TR.F.STDebtCurrPortOfLTDebt.date'],
-                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
+datatest, _ = ek.get_data(list1, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY",})
 
-datatest2, _ = ek.get_data(list2, fields=['TR.F.TotAssets', 'TR.F.STDebtCurrPortOfLTDebt.date'],
-                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
+datatest2, _ = ek.get_data(list2, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY",})
 
-assetsusd = pd.concat([datatest, datatest2], ignore_index=True)
+
 ### Store data to csv file
 df5.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\refinitivdata5.csv", index=False)
 assetsusd.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\assetsusd.csv", index=False)

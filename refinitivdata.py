@@ -173,19 +173,14 @@ DS90_annual = combined_dataset[['DS90 dummy', 'year']].groupby('year').mean().tr
 debttypes_and_debtspecs_over_time = pd.concat([debt_specialization_polar, HHI_annual, DS90_annual]).drop('Total',
                                                                                                          axis=0)
 
-######
-combined_dataset['lbmcap'] = combined_dataset['Market Capitalization'].apply(lambda x: np.log(x))
 ## CLUSTER ANALYSIS ##
 scatterdata = combined_dataset.copy()
+scatterdata['Other Borrowings/Total Debt'] = scatterdata['Other Borrowings/Total Debt'] + scatterdata['Trust Preferred/Total Debt']
 
 ## creating a subplot of scatterdata to find patterns for the clusters
 clusterpatterns = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
-                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt',
-                               'Trust Preferred/Total Debt']]
-# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Sweden', 1)
-# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Norway', 2)
-# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Denmark', 3)
-# clusterpatterns['Country of Exchange'] = clusterpatterns['Country of Exchange'].replace('Finland', 4)
+                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt']]
+
 clusterpatterns = clusterpatterns.replace([np.inf, -np.inf], np.nan).fillna(0)
 scaler = StandardScaler()
 data_scaled = scaler.fit_transform(clusterpatterns)
@@ -205,7 +200,7 @@ frame = pd.DataFrame({'Cluster': range(1, 20), 'SSE': SSE})
 plt.pyplot.plot(frame['Cluster'], frame['SSE'], marker='o')
 plt.pyplot.show()
 
-kmeans = KMeans(n_clusters=7, init='k-means++')
+kmeans = KMeans(n_clusters=6, init='k-means++')
 kmeans.fit(data_scaled)
 pred = kmeans.predict(data_scaled)
 
@@ -215,23 +210,28 @@ print(frame['Cluster'].value_counts())
 
 scatterdata.reset_index(inplace=True)
 scatterdata['clusters'] = frame['Cluster']
+
+## Include only Scatterdata that has observations for Common Shares, Total Assets, Current Assets, Current Liabilities
+scatterdata = scatterdata[scatterdata['Total Current Liabilities'] != 0]
+scatterdata = scatterdata[scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO'] != 0]
+scatterdata = scatterdata[scatterdata['Total Current Assets'] != 0]
+
 ### adding Market Leverage, Liquidity and Size to  the scatterdata dataset
 scatterdata['MV Equity'] = scatterdata['Price Close'] * scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO']
 scatterdata['Market Leverage'] = scatterdata['Debt - Total'] / (scatterdata['Debt - Total'] + scatterdata['MV Equity'])
 scatterdata['Liquidity'] = scatterdata['Total Current Assets'] / scatterdata['Total Current Liabilities']
 scatterdata['Size'] = scatterdata['Total Assets USD']
 
-## Include only Scatterdata that has observations for Common Shares, Total Assets, Current Assets, Current Liabilities
-##scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO'] = scatterdata['Common Shares - ''Outstanding - Total - ''Ord/DR/CPO'].drop(if)
+
 #### convert to polar ####
 scatterdata_polar = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
-                                 'Commercial Paper/Total Debt', 'Trust Preferred/Total Debt', 'clusters', 'HHI',
-                                 'Market Capitalization', 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']]
+                                 'Commercial Paper/Total Debt', 'clusters', 'HHI',
+                                 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']]
 scatterdata_polar = pl.from_pandas(scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
                                  'Revolving Credit/Total Debt', 'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
-                                 'Commercial Paper/Total Debt', 'Trust Preferred/Total Debt', 'clusters', 'HHI',
-                                 'Market Capitalization', 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']])
+                                 'Commercial Paper/Total Debt', 'clusters', 'HHI',
+                                 'ROE', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size']])
 
 scatterdata_polar = scatterdata_polar.groupby(
     [
@@ -245,9 +245,7 @@ scatterdata_polar = scatterdata_polar.groupby(
         pl.mean('Other Borrowings/Total Debt'),
         pl.mean('Capital Lease/Total Debt'),
         pl.mean('Commercial Paper/Total Debt'),
-        pl.mean('Trust Preferred/Total Debt'),
         pl.mean('HHI'),
-        pl.mean('Market Capitalization'),
         pl.mean('ROE'),
         pl.mean('Market Leverage'),
         pl.mean('Liquidity'),
@@ -258,20 +256,18 @@ scatterdata_polar.set_index('clusters', inplace=True)
 scatterdata_polar.sort_index(ascending=True, inplace=True)
 
 datafor3d = scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
-                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt',
-                               'Trust Preferred/Total Debt']]
+                               'Other Borrowings/Total Debt', 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt']]
 ##### prøver å lage 3d chart av clusteringen
 result = np.array(datafor3d)
-colors = ['r', 'b', 'g', 'y', 'b', 'p', 'o']
+colors = ['r', 'b', 'g', 'y', 'b', 'p']
 fig = plt.pyplot.figure(figsize=(8, 8), dpi=250)
 ax1 = fig.add_subplot(111, projection='3d')
 ax1.set_ylabel('Cluster', labelpad=10)
 ax1.set_zlabel('Percentage DS')
 xlabels = np.array(['Term Loans', 'Bonds and Notes', 'Revolving Credit',
-                    'Other Borrowings', 'Capital Lease', 'Commercial Paper',
-                    'Trust Preferred'])
+                    'Other Borrowings', 'Capital Lease', 'Commercial Paper'])
 xpos = np.arange(xlabels.shape[0])
-ylabels = np.array(['0', '1', '2', '3', '4', '5', '6'])
+ylabels = np.array(['0', '1', '2', '3', '4', '5'])
 ypos = np.arange(ylabels.shape[0])
 
 xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
@@ -294,3 +290,38 @@ values = np.linspace(0.2, 1., xposM.ravel().shape[0])
 colors = cm.rainbow(values)
 ax1.bar3d(xposM.ravel(), yposM.ravel(), dz * 0, dx, dy, dz, color=colors)
 plt.pyplot.show()
+
+## Table for concentration of debt specialization
+debtconcentrationdf = combined_dataset.copy()
+debtconcentrationdf['Other Borrowings/Total Debt'] = debtconcentrationdf['Other Borrowings/Total Debt'] + debtconcentrationdf['Trust Preferred/Total Debt']
+debtconcentrationdf = debtconcentrationdf[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+
+debtconcentrationdf = pl.from_pandas(debtconcentrationdf[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']])
+
+debtconcentrationdf = debtconcentrationdf.groupby(
+    [
+        'Term Loans/Total Debt',
+        'Bonds and Notes/Total Debt',
+        'Revolving Credit/Total Debt',
+        'Capital Lease/Total Debt',
+        'Commercial Paper/Total Debt',
+        'Other Borrowings/Total Debt'
+    ]
+#).agg(
+#    [
+#        pl.mean('Term Loans/Total Debt'),
+#        pl.mean('Bonds and Notes/Total Debt'),
+#        pl.mean('Revolving Credit/Total Debt'),
+#        pl.mean('Other Borrowings/Total Debt'),
+#        pl.mean('Capital Lease/Total Debt'),
+#        pl.mean('Commercial Paper/Total Debt'),
+#        pl.mean('HHI'),
+#        pl.mean('ROE'),
+#        pl.mean('Market Leverage'),
+#        pl.mean('Liquidity'),
+#        pl.mean('Size')
+#    ]
+#).to_pandas()
+#
