@@ -24,6 +24,19 @@ df5, _ = ek.get_data(list2, fields=['TR.CommonName', 'TR.F.STDebtCurrPortOfLTDeb
 
 print(df5.count())
 
+df6, _ = ek.get_data(list1, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.RevenueMean', 'TR.DPSMean', 'TR.F.CashSTInvst',
+                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean',
+                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
+                                    ],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY"})
+
+df7, _ = ek.get_data(list2, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.RevenueMean', 'TR.DPSMean', 'TR.F.CashSTInvst',
+                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean',
+                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
+                                    ],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY"})
+
+
 datatest, _ = ek.get_data(list1, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],
                      parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY",})
 
@@ -32,5 +45,6 @@ datatest2, _ = ek.get_data(list2, fields=['TR.IssuerRating', 'TR.FiFitchsRating'
 
 
 ### Store data to csv file
-df5.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\refinitivdata5.csv", index=False)
+df6.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\specialization_factors2.csv", index=False)
+df7.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\specialization_factors3.csv", index=False)
 assetsusd.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\assetsusd.csv", index=False)

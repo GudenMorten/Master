@@ -297,31 +297,162 @@ debtconcentrationdf['Other Borrowings/Total Debt'] = debtconcentrationdf['Other 
 debtconcentrationdf = debtconcentrationdf[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 
-debtconcentrationdf = pl.from_pandas(debtconcentrationdf[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
-                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']])
 
-debtconcentrationdf = debtconcentrationdf.groupby(
-    [
-        'Term Loans/Total Debt',
-        'Bonds and Notes/Total Debt',
-        'Revolving Credit/Total Debt',
-        'Capital Lease/Total Debt',
-        'Commercial Paper/Total Debt',
-        'Other Borrowings/Total Debt'
-    ]
-#).agg(
-#    [
-#        pl.mean('Term Loans/Total Debt'),
-#        pl.mean('Bonds and Notes/Total Debt'),
-#        pl.mean('Revolving Credit/Total Debt'),
-#        pl.mean('Other Borrowings/Total Debt'),
-#        pl.mean('Capital Lease/Total Debt'),
-#        pl.mean('Commercial Paper/Total Debt'),
-#        pl.mean('HHI'),
-#        pl.mean('ROE'),
-#        pl.mean('Market Leverage'),
-#        pl.mean('Liquidity'),
-#        pl.mean('Size')
-#    ]
-#).to_pandas()
-#
+thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+percentages_df = pd.DataFrame()
+
+
+for threshold in thresholds:
+    threshold_dict = {}
+    for col in debtconcentrationdf.columns:
+        percentage = (debtconcentrationdf[col] >= threshold).mean() * 100
+        threshold_dict[f'{col}_percentage'] = percentage
+    percentages_df = percentages_df.append(threshold_dict, ignore_index=True)
+
+percentages_df = percentages_df.transpose()
+
+## Debtconcentration for each country individually
+# NORWAY #
+debtconcentration_norway = combined_dataset.copy()
+debtconcentration_norway = debtconcentration_norway[debtconcentration_norway['Country of Exchange'] == 'Norway']
+debtconcentration_norway['Other Borrowings/Total Debt'] = debtconcentration_norway['Other Borrowings/Total Debt'] + debtconcentration_norway['Trust Preferred/Total Debt']
+debtconcentration_norway = debtconcentration_norway[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+
+thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+percentages_norway_df = pd.DataFrame()
+
+
+for threshold in thresholds:
+    threshold_dict = {}
+    for col in debtconcentration_norway.columns:
+        percentage = (debtconcentration_norway[col] >= threshold).mean() * 100
+        threshold_dict[f'{col}_percentage'] = percentage
+    percentages_norway_df = percentages_norway_df.append(threshold_dict, ignore_index=True)
+
+percentages_norway_df = percentages_norway_df.transpose()
+
+# SWEDEN #
+debtconcentration_sweden = combined_dataset.copy()
+debtconcentration_sweden = debtconcentration_sweden[debtconcentration_sweden['Country of Exchange'] == 'Sweden']
+debtconcentration_sweden['Other Borrowings/Total Debt'] = debtconcentration_sweden['Other Borrowings/Total Debt'] + debtconcentration_sweden['Trust Preferred/Total Debt']
+debtconcentration_sweden = debtconcentration_sweden[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+
+thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+percentages_sweden_df = pd.DataFrame()
+
+
+for threshold in thresholds:
+    threshold_dict = {}
+    for col in debtconcentration_sweden.columns:
+        percentage = (debtconcentration_sweden[col] >= threshold).mean() * 100
+        threshold_dict[f'{col}_percentage'] = percentage
+    percentages_sweden_df = percentages_sweden_df.append(threshold_dict, ignore_index=True)
+
+percentages_sweden_df = percentages_sweden_df.transpose()
+
+# DENMARK #
+debtconcentration_denmark = combined_dataset.copy()
+debtconcentration_denmark = debtconcentration_denmark[debtconcentration_denmark['Country of Exchange'] == 'Denmark']
+debtconcentration_denmark['Other Borrowings/Total Debt'] = debtconcentration_denmark['Other Borrowings/Total Debt'] + debtconcentration_denmark['Trust Preferred/Total Debt']
+debtconcentration_denmark = debtconcentration_denmark[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+
+thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+percentages_denmark_df = pd.DataFrame()
+
+
+for threshold in thresholds:
+    threshold_dict = {}
+    for col in debtconcentration_denmark.columns:
+        percentage = (debtconcentration_denmark[col] >= threshold).mean() * 100
+        threshold_dict[f'{col}_percentage'] = percentage
+    percentages_denmark_df = percentages_denmark_df.append(threshold_dict, ignore_index=True)
+
+percentages_denmark_df = percentages_denmark_df.transpose()
+
+# FINLAND #
+debtconcentration_finland = combined_dataset.copy()
+debtconcentration_finland = debtconcentration_finland[debtconcentration_finland['Country of Exchange'] == 'Finland']
+debtconcentration_finland['Other Borrowings/Total Debt'] = debtconcentration_finland['Other Borrowings/Total Debt'] + debtconcentration_finland['Trust Preferred/Total Debt']
+debtconcentration_finland = debtconcentration_finland[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+
+thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+percentages_finland_df = pd.DataFrame()
+
+
+for threshold in thresholds:
+    threshold_dict = {}
+    for col in debtconcentration_finland.columns:
+        percentage = (debtconcentration_finland[col] >= threshold).mean() * 100
+        threshold_dict[f'{col}_percentage'] = percentage
+    percentages_finland_df = percentages_finland_df.append(threshold_dict, ignore_index=True)
+
+percentages_finland_df = percentages_finland_df.transpose()
+
+## conditional debt concentration
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Term Loans/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage = pd.DataFrame()
+conditional_debt_concentration_percentage['TL30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['B&N30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['RC30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['CL30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['CP30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['OB30avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
+
+### Debt specialization (Which firms specialize)
+which_firms_specialize = pd.read_csv('specialization_factors2.csv')
+
+
+#new_column_names = {'Instrument': 'Instrument', 'Total Assets': 'Total Assets USD', 'Date': 'Date'}
+#assetsusd = assetsusd.rename(columns=new_column_names)
+#assetsusd = assetsusd.drop_duplicates(subset=['Instrument', 'Date'])
+#refinitivdata = refinitivdata.drop_duplicates(subset=['Instrument', 'Date'])
+#refinitivdata = pd.merge(refinitivdata, assetsusd, on=['Instrument', 'Date'])
+
+
+
