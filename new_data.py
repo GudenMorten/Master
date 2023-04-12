@@ -24,20 +24,20 @@ df5, _ = ek.get_data(list2, fields=['TR.CommonName', 'TR.F.STDebtCurrPortOfLTDeb
 
 print(df5.count())
 
-df6, _ = ek.get_data(list1, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.RevenueMean', 'TR.DPSMean', 'TR.F.CashSTInvst',
+df6, _ = ek.get_data(list1, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.TOTREVENUE', 'TR.DPSMean', 'TR.F.CashSTInvst',
+                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean', 'TR.COGSActValue',
+                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
+                                    ],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
+
+df7, _ = ek.get_data(list2, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.TOTREVENUE', 'TR.DPSMean', 'TR.F.CashSTInvst',
                                     'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean',
                                     'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
                                     ],
-                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY"})
-
-df7, _ = ek.get_data(list2, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.RevenueMean', 'TR.DPSMean', 'TR.F.CashSTInvst',
-                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean',
-                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
-                                    ],
-                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY"})
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
 
 
-datatest, _ = ek.get_data(list1, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],
+datatest, _ = ek.get_data(list1, fields=['TR.IR.Rating'],
                      parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY",})
 
 datatest2, _ = ek.get_data(list2, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],

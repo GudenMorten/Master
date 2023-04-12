@@ -446,11 +446,15 @@ conditional_debt_concentration_percentage = conditional_debt_concentration_perce
 
 ### Debt specialization (Which firms specialize)
 which_firms_specialize = pd.read_csv('specialization_factors2.csv')
-
-
+which_firms_specialize = which_firms_specialize.drop_duplicates(subset=['Instrument', 'Date'])
+which_firms_specialize['Date'] = pd.to_datetime(which_firms_specialize['Date'], format='%Y/%m/%d')
+which_firms_specialize = pd.merge(refinitivdata, which_firms_specialize, on=['Instrument', 'Date'])
+which_firms_specialize = which_firms_specialize.fillna(0)
+spec_data_needed = pd.DataFrame()
+spec_data_needed['ln Size'] = np.log(which_firms_specialize['Revenue - Mean'])
 #new_column_names = {'Instrument': 'Instrument', 'Total Assets': 'Total Assets USD', 'Date': 'Date'}
 #assetsusd = assetsusd.rename(columns=new_column_names)
-#assetsusd = assetsusd.drop_duplicates(subset=['Instrument', 'Date'])
+
 #refinitivdata = refinitivdata.drop_duplicates(subset=['Instrument', 'Date'])
 #refinitivdata = pd.merge(refinitivdata, assetsusd, on=['Instrument', 'Date'])
 
