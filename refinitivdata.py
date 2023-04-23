@@ -1,11 +1,15 @@
 import pandas as pd
 import polars as pl
-import seaborn as sns
 import matplotlib as plt
 from matplotlib import cm
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+from scipy.stats import pearsonr
+from scipy.stats import ttest_ind
+import scipy.stats as stats
+from scipy.stats import norm
+import statsmodels.api as sm
 
 refinitivdata = pd.read_csv('refinitivdata4.csv')
 assetsusd =  pd.read_csv('assetsusd.csv')
@@ -55,6 +59,7 @@ combined_dataset = pd.merge(refinitivdata_withgvkey, capitalstructure_sorted, le
                             right_on=['gvkey', 'year'], how='right')
 combined_dataset = combined_dataset[~combined_dataset["NAICS Sector Code"].isin(['22', '52', '53'])]
 combined_dataset = combined_dataset[~combined_dataset["Date"].isin(["NaT"])]
+combined_dataset = combined_dataset[combined_dataset['Date'].dt.year.isin(range(2001, 2022))]
 combined_dataset = combined_dataset[
     combined_dataset["Country of Exchange"].isin(['Norway', 'Sweden', 'Finland', 'Denmark'])]
 
@@ -146,10 +151,9 @@ combined_dataset['SS'] = (combined_dataset['Revolving Credit'] / combined_datase
         combined_dataset['Term Loans'] / combined_dataset['TD']) ** 2 + \
                          (combined_dataset['Bonds and Notes'] / combined_dataset['TD']) ** 2 + (
                                  combined_dataset['Capital Lease'] / combined_dataset['TD']) ** 2 + \
-                         (combined_dataset['Commercial Paper'] / combined_dataset['TD']) ** 2 + (
-                                 combined_dataset['Trust Preferred'] / combined_dataset['TD']) ** 2 + \
+                         (combined_dataset['Commercial Paper'] / combined_dataset['TD']) ** 2 + \
                          (combined_dataset['Other Borrowings'] / combined_dataset['TD']) ** 2
-combined_dataset['HHI'] = (combined_dataset['SS'] - (1 / 7)) / (1 - (1 / 7))
+combined_dataset['HHI'] = (combined_dataset['SS'] - (1 / 6)) / (1 - (1 / 6))
 
 ### HHI aggregated on years ###
 HHI_annual = combined_dataset[['HHI', 'year']].groupby(['year']).mean().transpose()
@@ -397,66 +401,366 @@ conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Term Loans/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Term Loans/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
 conditional_debt_concentration_percentage = pd.DataFrame()
-conditional_debt_concentration_percentage['TL30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['TL50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['B&N30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['B&N50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['RC30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['RC50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['CL30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['CL50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['CP30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['CP50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
 conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
-conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.3]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.5]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['OB30avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['OB50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
+
+## conditional debt concentration
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Term Loans/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage = pd.DataFrame()
+conditional_debt_concentration_percentage['TL50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['B&N50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['RC50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['CL50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['CP50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration = combined_dataset.copy()
+conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration['Other Borrowings/Total Debt'] + conditional_debt_concentration['Trust Preferred/Total Debt']
+conditional_debt_concentration = conditional_debt_concentration[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration = conditional_debt_concentration[conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.5]
+conditional_debt_concentration = conditional_debt_concentration.transpose()
+conditional_debt_concentration_percentage['OB50avg'] = conditional_debt_concentration.mean(axis=1)
+
+conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
+
+## conditional debt concentration on industry
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Term Loans/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage = pd.DataFrame()
+conditional_debt_concentration_percentage['TL50avg'] = conditional_debt_concentration_industry.mean(axis=1)
+
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Bonds and Notes/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage['B&N50avg'] = conditional_debt_concentration_industry.mean(axis=1)
+
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Revolving Credit/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage['RC50avg'] = conditional_debt_concentration_industry.mean(axis=1)
+
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Capital Lease/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage['CL50avg'] = conditional_debt_concentration_industry.mean(axis=1)
+
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Commercial Paper/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage['CP50avg'] = conditional_debt_concentration_industry.mean(axis=1)
+
+conditional_debt_concentration_industry = combined_dataset.copy()
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['NAICS Sector Code'].isin(['72'])]
+conditional_debt_concentration_industry['Other Borrowings/Total Debt'] = conditional_debt_concentration_industry['Other Borrowings/Total Debt'] + conditional_debt_concentration_industry['Trust Preferred/Total Debt']
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry[conditional_debt_concentration_industry['Other Borrowings/Total Debt'] >= 0.5]
+conditional_debt_concentration_industry = conditional_debt_concentration_industry.transpose()
+conditional_debt_concentration_percentage['OB50avg'] = conditional_debt_concentration_industry.mean(axis=1)
 
 conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
 
 ### Debt specialization (Which firms specialize)
-which_firms_specialize = pd.read_csv('specialization_factors2.csv')
+which_firms_specialize = pd.read_csv('which_firms_specialize.csv')
+which_firms_specialize.fillna(0, inplace=True)
+which_firms_specialize.rename(columns={'Debt - Total': 'Debt - Total USD', 'Market Capitalization': 'Market Cap USD', 'Price Close': 'Price Close USD'}, inplace=True)
 which_firms_specialize = which_firms_specialize.drop_duplicates(subset=['Instrument', 'Date'])
 which_firms_specialize['Date'] = pd.to_datetime(which_firms_specialize['Date'], format='%Y/%m/%d')
 which_firms_specialize = pd.merge(refinitivdata, which_firms_specialize, on=['Instrument', 'Date'])
 which_firms_specialize = which_firms_specialize.fillna(0)
+which_firms_specialize['Revenue with constant'] = which_firms_specialize['Revenue from Business Activities - Total'] + 1
+which_firms_specialize['Revenue with constant'] = which_firms_specialize['Revenue with constant'][which_firms_specialize['Revenue with constant'] > 0]
+which_firms_specialize['Assets with constant'] = which_firms_specialize['Total Assets USD'] + 1
+which_firms_specialize['Assets with constant'] = which_firms_specialize['Assets with constant'][which_firms_specialize['Assets with constant'] > 0]
+
+which_firms_specialize['Market Cap USD'] = which_firms_specialize['Market Cap USD'].drop_duplicates()
+which_firms_specialize['Net Income after Tax'] = which_firms_specialize['Net Income after Tax'].drop_duplicates()
+which_firms_specialize["Total Shareholders' Equity incl Minority Intr & Hybrid Debt"] = which_firms_specialize["Total Shareholders' Equity incl Minority Intr & Hybrid Debt"].drop_duplicates()
+which_firms_specialize['Date'] = pd.to_datetime(which_firms_specialize['Date'])
+which_firms_specialize = which_firms_specialize[which_firms_specialize['Date'].dt.year.isin(range(2001, 2022))]
+
 spec_data_needed = pd.DataFrame()
-spec_data_needed['ln Size'] = np.log(which_firms_specialize['Revenue - Mean'])
-#new_column_names = {'Instrument': 'Instrument', 'Total Assets': 'Total Assets USD', 'Date': 'Date'}
-#assetsusd = assetsusd.rename(columns=new_column_names)
+spec_data_needed['ln Size'] = np.log(which_firms_specialize['Assets with constant'])
+spec_data_needed['ln Sales'] = np.log(which_firms_specialize['Revenue with constant'])
+spec_data_needed['M/B'] = which_firms_specialize['Market Cap USD'] / which_firms_specialize['Total Assets USD']
+spec_data_needed['ROE'] = which_firms_specialize['ROE']
+spec_data_needed['Dividend Payer'] = which_firms_specialize['Dividend Per Share - Mean'].apply(lambda x: 1 if x != 0 else 0)
+spec_data_needed['Cash Holdings'] = which_firms_specialize['Cash & Short Term Investments'] / which_firms_specialize['Total Assets USD']
+spec_data_needed['Tangibility'] = which_firms_specialize['PPE - Net Percentage of Total Assets']
+spec_data_needed['Book Leverage'] = which_firms_specialize['Debt - Total USD'] / which_firms_specialize['Total Assets USD']
+spec_data_needed['CAPEX'] = which_firms_specialize['CAPEX Percentage of Total Assets']
+spec_data_needed['CAPEX'] = spec_data_needed['CAPEX']/100
+spec_data_needed['Advertising'] = which_firms_specialize['Selling General & Administrative Expenses - Total'] / which_firms_specialize['Total Assets USD']
+spec_data_needed['Instrument'] = which_firms_specialize['Instrument']
+spec_data_needed['Date'] = which_firms_specialize['Date']
+spec_data_needed = spec_data_needed.replace([np.inf, -np.inf], np.nan).dropna()
 
-#refinitivdata = refinitivdata.drop_duplicates(subset=['Instrument', 'Date'])
-#refinitivdata = pd.merge(refinitivdata, assetsusd, on=['Instrument', 'Date'])
+# merging spec_data_needed with HHI and DS90
+spec_data_combined = pd.merge(spec_data_needed, combined_dataset, on=['Instrument', 'Date'])
+spec_data_combined.dropna(axis=0, inplace=True)
+
+spec_data_needed = spec_data_combined[['ln Size', 'ln Sales', 'M/B', 'ROE_x', 'Dividend Payer', 'Cash Holdings',
+                                       'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising', 'Instrument', 'Date',
+                                       'HHI', 'DS90 dummy']]
+# Correlation between variables
+rho = spec_data_needed.corr()
+pval = spec_data_needed.corr(method=lambda x, y: pearsonr(x, y) [1]) - np.eye(*rho.shape)
+p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x<=t]))
+rho.round(2).astype(str) + p
 
 
+spec_data_needed_sorted = spec_data_needed.sort_values('HHI')
+spec_data_needed_sorted['quartile'] = pd.qcut(spec_data_needed_sorted['HHI'], q=3, labels=['1st tertile', '2nd tertile', '3rd tertile'])
 
+
+tertile1 = spec_data_needed['HHI'].quantile(0.33)
+tertile2 = spec_data_needed['HHI'].quantile(0.67)
+
+# create new columns based on HHI percentiles
+spec_data_needed['1st T'] = (spec_data_needed['HHI'] <= tertile1).astype(int)
+spec_data_needed['3rd T'] = (spec_data_needed['HHI'] >= tertile2).astype(int)
+
+mean_median = pd.DataFrame()
+mean_median['Mean 1st T'] = spec_data_needed[spec_data_needed['1st T'] == 1].mean()
+mean_median['Median 1st T'] = spec_data_needed[spec_data_needed['1st T'] == 1].median()
+mean_median['Mean 3rd T'] = spec_data_needed[spec_data_needed['3rd T'] == 1].mean()
+mean_median['Median 3rd T'] = spec_data_needed[spec_data_needed['3rd T'] == 1].median()
+
+# T-test between 1st and 4th quantile
+t_test_dataframe = spec_data_needed.drop(['Instrument', 'Date'], axis=1)
+exclude_cols = ['DS90 dummy', '1st T', '3rd T', 'HHI']
+
+for col in t_test_dataframe.columns:
+    if col in exclude_cols:
+        continue
+    values1 = t_test_dataframe[t_test_dataframe['1st T'] == 1][col].values
+    values2 = t_test_dataframe[t_test_dataframe['3rd T'] == 1][col].values
+    t_stat, p_value = ttest_ind(values1, values2, equal_var=False)
+    print(f"T-test results: t-statistic = {t_stat:.2f}, p-value = {p_value:.2f}")
+
+ss_t_test = t_test_dataframe.describe()
+
+# wilcoxon test
+wilcoxon_dataframe = spec_data_needed.drop(['Instrument', 'Date'], axis=1)
+exclude_cols = ['DS90 dummy', '1st T', '3rd T', 'HHI']
+
+for col in t_test_dataframe.columns:
+    if col in exclude_cols:
+        continue
+    column1 = wilcoxon_dataframe[wilcoxon_dataframe['1st T'] == 1][col].values
+    column2 = wilcoxon_dataframe[wilcoxon_dataframe['3rd T'] == 1][col].values
+    statistic, pvalue = stats.wilcoxon(column1, column2)
+    n = len(column1)
+    W = statistic
+    Z = (W - (n * (n + 1)) / 4) / np.sqrt((n * (n + 1) * (2 * n + 1)) / 24)
+    print(f" Statistic result = {statistic:.2f}, p-value = {pvalue:.2f}, Z-score = {Z:.2f}")
+
+ss_wilcoxon = wilcoxon_dataframe.describe()
+
+### Multivariate regression
+multivariate_reg = spec_data_needed.copy()
+multivariate_reg = multivariate_reg.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales','DS90 dummy'], axis =1)
+multivariate_reg = pd.merge(multivariate_reg, which_firms_specialize[['Instrument', 'Date']], how='left', on=['Instrument', 'Date'])
+multivariate_reg['Date'] = multivariate_reg['Date'].dt.year
+## lagging HHI by -1
+multivariate_reg.set_index(['Date', 'Instrument'], inplace=True)
+shifted = multivariate_reg.groupby(level='Instrument').shift(-1)
+multivariate_reg.join(shifted.rename(columns=lambda x: x+'_lag'))
+multivariate_merge = pd.merge(multivariate_reg, shifted['HHI'], left_index=True, right_index=True, how='left')
+multivariate_merge.reset_index(inplace=True)
+multivariate_merge.drop(['HHI_x', 'Instrument', 'Date'], axis=1, inplace=True)
+multivariate_merge.dropna(inplace=True)
+
+
+Y = multivariate_merge['HHI_y'].fillna(0)
+X = multivariate_merge.drop(['HHI_y'], axis=1).fillna(0)
+
+X = sm.add_constant(X)
+multivariate_reg = sm.OLS(Y, X)
+multivariate_reg_res = multivariate_reg.fit(cov_type = "HC0")
+print(multivariate_reg_res.summary())
+### adding NAICS dummies
+multivariate_reg1 = spec_data_needed.copy()
+multivariate_reg1 = multivariate_reg1.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales','DS90 dummy'], axis =1)
+multivariate_reg1 = pd.merge(multivariate_reg1, which_firms_specialize[['Instrument', 'Date', 'NAICS Sector Code']], how='left', on=['Instrument', 'Date'])
+multivariate_reg1['Date'] = multivariate_reg1['Date'].dt.year
+
+dummies_NAICS = pd.get_dummies(multivariate_reg1['NAICS Sector Code'])
+multivariate_merge1 = pd.concat([multivariate_reg1, dummies_NAICS], axis=1)
+multivariate_merge1.drop(['NAICS Sector Code', 'Date', 'Instrument'], axis=1, inplace=True)
+
+Y = multivariate_merge1['HHI'].fillna(0)
+X = multivariate_merge1.drop(['HHI', '62'], axis=1).fillna(0)
+
+X = sm.add_constant(X)
+multivariate_reg1 = sm.OLS(Y, X)
+multivariate_reg_res1 = multivariate_reg1.fit(cov_type = "HC0")
+print(multivariate_reg_res1.summary())
+
+### only country dummy
+multivariate_reg2 = spec_data_needed.copy()
+multivariate_reg2 = multivariate_reg2.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales','DS90 dummy'], axis =1)
+multivariate_reg2 = pd.merge(multivariate_reg2, which_firms_specialize[['Instrument', 'Date', 'Country of Exchange']], how='left', on=['Instrument', 'Date'])
+multivariate_reg2['Date'] = multivariate_reg2['Date'].dt.year
+
+dummies_country = pd.get_dummies(multivariate_reg2['Country of Exchange'])
+multivariate_merge2 = pd.concat([multivariate_reg2, dummies_country], axis=1)
+multivariate_merge2.drop(['Country of Exchange', 'Date', 'Instrument'], axis=1, inplace=True)
+
+Y = multivariate_merge2['HHI'].fillna(0)
+X = multivariate_merge2.drop(['HHI', 'Denmark'], axis=1).fillna(0)
+
+X = sm.add_constant(X)
+multivariate_reg2 = sm.OLS(Y, X)
+multivariate_reg_res2 = multivariate_reg2.fit(cov_type = "HC0")
+print(multivariate_reg_res2.summary())
+
+### year dummies only
+multivariate_reg3 = spec_data_needed.copy()
+multivariate_reg3 = multivariate_reg3.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales','DS90 dummy'], axis =1)
+multivariate_reg3 = pd.merge(multivariate_reg3, which_firms_specialize[['Instrument', 'Date']], how='left', on=['Instrument', 'Date'])
+multivariate_reg3['Date'] = multivariate_reg3['Date'].dt.year
+
+dummies_year = pd.get_dummies(multivariate_reg3['Date'])
+multivariate_merge3 = pd.concat([multivariate_reg3, dummies_year], axis=1)
+multivariate_merge3.drop(['Date', 'Instrument'], axis=1, inplace=True)
+
+Y = multivariate_merge3['HHI'].fillna(0)
+X = multivariate_merge3.drop(['HHI', 2001], axis=1).fillna(0)
+
+X = sm.add_constant(X)
+multivariate_reg3 = sm.OLS(Y, X)
+multivariate_reg_res3 = multivariate_reg3.fit(cov_type = "HC0")
+print(multivariate_reg_res3.summary())
+
+
+##
+
+# count unique observations and their percentages
+counts = combined_dataset['NAICS Sector Code'].value_counts()
+percentages = counts / len(combined_dataset) * 100
+
+# print the results
+for idx, val in enumerate(counts.index):
+    count = counts.get(val, default=0)
+    percentage = count / len(combined_dataset) * 100
+    print(f"{val}: {count} ({percentage:.2f}%)")
+
+##
+#debtconcentrationdf = combined_dataset.copy()
+#debtconcentrationdf = debtconcentrationdf[debtconcentrationdf['NAICS Sector Code'].isin(['21'])]
+#debtconcentrationdf['Other Borrowings/Total Debt'] = debtconcentrationdf['Other Borrowings/Total Debt'] + debtconcentrationdf['Trust Preferred/Total Debt']
+#debtconcentrationdf = debtconcentrationdf[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
+#                                 'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
+#
+#
+# thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]
+# percentages_df = pd.DataFrame()
+#
+#
+#for threshold in thresholds:
+#    threshold_dict = {}
+#    for col in debtconcentrationdf.columns:
+#        percentage = (debtconcentrationdf[col] >= threshold).mean() * 100
+#        threshold_dict[f'{col}_percentage'] = percentage
+#    percentages_df = percentages_df.append(threshold_dict, ignore_index=True)
+#
+#percentages_df = percentages_df.transpose(#)

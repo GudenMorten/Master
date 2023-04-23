@@ -160,3 +160,6 @@ print(reg4_norway_res.summary())
 print(reg4_denmark_res.summary())
 print(reg4_sweden_res.summary())
 print(reg4_finland_res.summary())
+
+
+

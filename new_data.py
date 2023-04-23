@@ -3,6 +3,7 @@ import pandas as pd
 
 # Replace YOUR_APP_KEY with your Eikon API key
 ek.set_app_key('022971ea1eb44687b0bcb92bad73c9b83ab08a9d')
+#ek.set_app_key('a8fc844cd3e94181ab17ecc4f32ebed1f8f311f6')
 
 nordic_data = pd.read_excel("total_ISIN.xlsx")
 nordic_data2 = pd.read_excel("ISIN2.xlsx")
@@ -25,14 +26,14 @@ df5, _ = ek.get_data(list2, fields=['TR.CommonName', 'TR.F.STDebtCurrPortOfLTDeb
 print(df5.count())
 
 df6, _ = ek.get_data(list1, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.TOTREVENUE', 'TR.DPSMean', 'TR.F.CashSTInvst',
-                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean', 'TR.COGSActValue',
-                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
+                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSActValue',
+                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot', 'TR.F.MktCap', 'TR.F.DebtTot', 'TR.PriceClose'
                                     ],
                      parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
 
 df7, _ = ek.get_data(list2, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.TOTREVENUE', 'TR.DPSMean', 'TR.F.CashSTInvst',
-                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSMean',
-                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot'
+                                    'TR.F.NetPPEPctofTotAssets', 'TR.F.PPENetTotYoYAvg', 'TR.COGSActValue',
+                                    'TR.F.DeprDeplAmortTot', 'TR.F.CAPEXTotPctTotAssets', 'TR.F.SGATot', 'TR.F.MktCap', 'TR.F.DebtTot', 'TR.PriceClose'
                                     ],
                      parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
 
@@ -45,6 +46,6 @@ datatest2, _ = ek.get_data(list2, fields=['TR.IssuerRating', 'TR.FiFitchsRating'
 
 
 ### Store data to csv file
-df6.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\specialization_factors2.csv", index=False)
-df7.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\specialization_factors3.csv", index=False)
+df6.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\which_firms_specialize.csv", index=False)
+df7.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\which_firms_specialize2.csv", index=False)
 assetsusd.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\assetsusd.csv", index=False)

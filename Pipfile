@@ -10,6 +10,7 @@ refinitiv-dataplatform = "*"
 refinitiv-data = "*"
 polars = "*"
 scikit-learn = "*"
+reg = "*"
 
 [dev-packages]
 
