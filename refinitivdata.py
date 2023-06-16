@@ -16,7 +16,8 @@ from scipy.stats.mstats import winsorize
 import statsmodels.stats.diagnostic as dg
 import statsmodels.tools.tools as ct
 
-
+extra_var = pd.read_csv('operating_profit.csv')
+extra_var = extra_var.drop_duplicates(subset=['Instrument', 'Date'])
 refinitivdata = pd.read_csv('refinitivdata4.csv')
 assetsusd = pd.read_csv('assetsusd.csv')
 new_column_names = {'Instrument': 'Instrument', 'Total Assets': 'Total Assets USD', 'Date': 'Date'}
@@ -24,6 +25,7 @@ assetsusd = assetsusd.rename(columns=new_column_names)
 assetsusd = assetsusd.drop_duplicates(subset=['Instrument', 'Date'])
 refinitivdata = refinitivdata.drop_duplicates(subset=['Instrument', 'Date'])
 refinitivdata = pd.merge(refinitivdata, assetsusd, on=['Instrument', 'Date'])
+refinitivdata = pd.merge(refinitivdata, extra_var, on=['Instrument', 'Date'])
 # fixing the dataframe
 refinitivdata[['Company Common Name', 'NAICS Sector Code',
                'NAICS Subsector Code', 'NAICS National Industry Code',
@@ -56,7 +58,9 @@ refinitivdata['Short-Term Debt/Total Debt'] = refinitivdata['Short-Term Debt & C
 refinitivdata['Fiscal Year'] = refinitivdata['Date'].dt.year
 refinitivdata['ROE'] = refinitivdata['Net Income after Tax'] / refinitivdata[
     "Total Shareholders' Equity incl Minority Intr & Hybrid Debt"]
-
+refinitivdata['Profitability'] = refinitivdata['Operating Profit before Non-Recurring Income/Expense'] / refinitivdata['Total Assets USD']
+refinitivdata['CF Volatility std'] = refinitivdata['Operating Profit before Non-Recurring Income/Expense'].rolling(4).std()
+refinitivdata['CF Volatility'] = refinitivdata['CF Volatility std'] / refinitivdata['Total Assets USD']
 # Merging the gvisin dataset with the refinitivdata dataset to include gvkey as well as ISIN number
 refinitivdata_withgvkey = pd.merge(refinitivdata, gvisin, on='Instrument', how='left')
 
@@ -109,6 +113,11 @@ combined_dataset['Total debt relative'] = combined_dataset[
     ['Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
      'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
      'Trust Preferred/Total Debt']].fillna(0).sum(axis=1)
+#
+combined_dataset['MV Equity'] = combined_dataset['Price Close'] * combined_dataset[
+    'Common Shares - ''Outstanding - Total - ''Ord/DR/CPO']
+combined_dataset['Market Leverage'] = combined_dataset['Debt - Total'] / (combined_dataset['Debt - Total'] + combined_dataset['MV Equity'])
+
 
 debt_specialization = combined_dataset[
     ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
@@ -182,7 +191,40 @@ DS90_annual = combined_dataset[['DS90 dummy', 'year']].groupby('year').mean().tr
 ## combining DS90, HHI_annual and Debt specs into 1 dataframe ##
 debttypes_and_debtspecs_over_time = pd.concat([debt_specialization_polar, HHI_annual, DS90_annual]).drop('Total',
                                                                                                          axis=0)
+#print(debttypes_and_debtspecs_over_time.to_latex())
+## time-varying effect per country
+debttypes_and_debtspecs_over_time_norway = combined_dataset[
+    ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+     'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
+     'Country of Exchange', 'HHI', 'DS90 dummy']]
+debttypes_and_debtspecs_over_time_norway = debttypes_and_debtspecs_over_time_norway[debttypes_and_debtspecs_over_time_norway['Country of Exchange']== 'Norway']
+debttypes_and_debtspecs_over_time_norway = debttypes_and_debtspecs_over_time_norway.groupby('year').mean().transpose()
 
+debttypes_and_debtspecs_over_time_sweden = combined_dataset[
+    ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+     'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
+     'Country of Exchange', 'HHI', 'DS90 dummy']]
+debttypes_and_debtspecs_over_time_sweden = debttypes_and_debtspecs_over_time_sweden[debttypes_and_debtspecs_over_time_sweden['Country of Exchange']== 'Sweden']
+debttypes_and_debtspecs_over_time_sweden = debttypes_and_debtspecs_over_time_sweden.groupby('year').mean().transpose()
+
+debttypes_and_debtspecs_over_time_denmark = combined_dataset[
+    ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+     'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
+     'Country of Exchange', 'HHI', 'DS90 dummy']]
+debttypes_and_debtspecs_over_time_denmark = debttypes_and_debtspecs_over_time_denmark[debttypes_and_debtspecs_over_time_denmark['Country of Exchange']== 'Denmark']
+debttypes_and_debtspecs_over_time_denmark = debttypes_and_debtspecs_over_time_denmark.groupby('year').mean().transpose()
+
+debttypes_and_debtspecs_over_time_Finland = combined_dataset[
+    ['year', 'Revolving Credit/Total Debt', 'Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
+     'Commercial Paper/Total Debt', 'Capital Lease/Total Debt', 'Other Borrowings/Total Debt',
+     'Country of Exchange', 'HHI', 'DS90 dummy']]
+debttypes_and_debtspecs_over_time_Finland = debttypes_and_debtspecs_over_time_Finland[debttypes_and_debtspecs_over_time_Finland['Country of Exchange']== 'Finland']
+debttypes_and_debtspecs_over_time_Finland = debttypes_and_debtspecs_over_time_Finland.groupby('year').mean().transpose()
+
+print(debttypes_and_debtspecs_over_time_norway.to_latex())
+print(debttypes_and_debtspecs_over_time_sweden.to_latex())
+print(debttypes_and_debtspecs_over_time_denmark.to_latex())
+print(debttypes_and_debtspecs_over_time_Finland.to_latex())
 ## CLUSTER ANALYSIS ##
 scatterdata = combined_dataset.copy()
 scatterdata['Other Borrowings/Total Debt'] = scatterdata['Other Borrowings/Total Debt'] + scatterdata[
@@ -254,24 +296,25 @@ trengerenkolonnebare['Date'] = pd.to_datetime(trengerenkolonnebare['Date'])
 trengerenkolonnebare = trengerenkolonnebare[trengerenkolonnebare['Date'].dt.year.isin(range(2001, 2022))]
 
 ### adding Market Leverage, Liquidity and Size to  the scatterdata dataset
-scatterdata['MV Equity'] = scatterdata['Price Close'] * scatterdata[
-    'Common Shares - ''Outstanding - Total - ''Ord/DR/CPO']
+#scatterdata['MV Equity'] = scatterdata['Price Close'] * scatterdata[
+#    'Common Shares - ''Outstanding - Total - ''Ord/DR/CPO']
 scatterdata['Book Leverage'] = trengerenkolonnebare['Debt - Total USD'] / trengerenkolonnebare['Total Assets USD']
-scatterdata['Market Leverage'] = scatterdata['Debt - Total'] / (scatterdata['Debt - Total'] + scatterdata['MV Equity'])
+#scatterdata['Market Leverage'] = scatterdata['Debt - Total'] / (scatterdata['Debt - Total'] + scatterdata['MV Equity'])
 scatterdata['Liquidity'] = scatterdata['Total Current Assets'] / scatterdata['Total Current Liabilities']
 scatterdata['Size Assets USD'] = scatterdata['Total Assets USD']
 scatterdata['Size Mcap USD'] = trengerenkolonnebare['Market Cap USD']
-
+scatterdata['M/B'] = trengerenkolonnebare['Market Cap USD'] / trengerenkolonnebare['Total Assets USD']
+scatterdata['CF Volatility'] = combined_dataset['CF Volatility']
 #### convert to polar ####
 scatterdata_polar = scatterdata[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
                                  'Other Borrowings/Total Debt', 'Capital Lease/Total Debt',
                                  'Commercial Paper/Total Debt', 'clusters', 'HHI',
-                                 'ROE', 'MV Equity', 'Book Leverage', 'Liquidity', 'Size Mcap USD', 'Size Assets USD']]
+                                 'Profitability', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size Mcap USD', 'Size Assets USD', 'M/B', 'CF Volatility']]
 scatterdata_polar = pl.from_pandas(scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt',
                                                       'Revolving Credit/Total Debt', 'Other Borrowings/Total Debt',
                                                       'Capital Lease/Total Debt',
                                                       'Commercial Paper/Total Debt', 'clusters', 'HHI',
-                                                      'ROE', 'MV Equity', 'Book Leverage', 'Liquidity', 'Size Mcap USD', 'Size Assets USD']])
+                                                      'Profitability', 'MV Equity', 'Market Leverage', 'Liquidity', 'Size Mcap USD', 'Size Assets USD', 'M/B', 'CF Volatility']])
 ### observasjoner av de ulike clusterne
 print((scatterdata['Term Loans/Total Debt'] != 0).sum())
 print((scatterdata['Bonds and Notes/Total Debt'] != 0).sum())
@@ -294,18 +337,20 @@ scatterdata_polar = scatterdata_polar.groupby(
         pl.mean('Capital Lease/Total Debt'),
         pl.mean('Commercial Paper/Total Debt'),
         pl.mean('HHI'),
-        pl.mean('ROE'),
-        pl.mean('Book Leverage'),
+        pl.mean('Profitability'),
+        pl.mean('Market Leverage'),
         pl.mean('Liquidity'),
         pl.mean('Size Mcap USD'),
-        pl.mean('Size Assets USD')
+        pl.mean('Size Assets USD'),
+        pl.mean('M/B'),
+        pl.mean('CF Volatility')
     ]
 ).to_pandas()
 scatterdata_polar.set_index('clusters', inplace=True)
 scatterdata_polar.sort_index(ascending=True, inplace=True)
 
 ##
-#latex_cluster_table = scatterdata_polar.to_latex(index=False)
+print(scatterdata_polar.to_latex())
 #print(latex_cluster_table)
 
 datafor3d = scatterdata_polar[['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
@@ -364,7 +409,7 @@ for threshold in thresholds:
     percentages_df = percentages_df.append(threshold_dict, ignore_index=True)
 
 percentages_df = percentages_df.transpose()
-
+print(percentages_df.to_latex())
 ## Debtconcentration for each country individually
 # NORWAY #
 debtconcentration_norway = combined_dataset.copy()
@@ -460,10 +505,10 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Term Loans/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Term Loans/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
 conditional_debt_concentration_percentage = pd.DataFrame()
-conditional_debt_concentration_percentage['TL50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['TL30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -474,9 +519,9 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Bonds and Notes/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['B&N50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['B&N30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -487,9 +532,9 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Revolving Credit/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['RC50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['RC30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -500,9 +545,9 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Capital Lease/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['CL50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['CL30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -513,9 +558,9 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Commercial Paper/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['CP50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['CP30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -526,12 +571,12 @@ conditional_debt_concentration = conditional_debt_concentration[
     ['Term Loans/Total Debt', 'Bonds and Notes/Total Debt', 'Revolving Credit/Total Debt',
      'Capital Lease/Total Debt', 'Commercial Paper/Total Debt', 'Other Borrowings/Total Debt']]
 conditional_debt_concentration = conditional_debt_concentration[
-    conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.5]
+    conditional_debt_concentration['Other Borrowings/Total Debt'] >= 0.3]
 conditional_debt_concentration = conditional_debt_concentration.transpose()
-conditional_debt_concentration_percentage['OB50avg'] = conditional_debt_concentration.mean(axis=1)
+conditional_debt_concentration_percentage['OB30avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
-
+#print(conditional_debt_concentration_percentage.to_latex())
 ## conditional debt concentration
 conditional_debt_concentration = combined_dataset.copy()
 conditional_debt_concentration['Other Borrowings/Total Debt'] = conditional_debt_concentration[
@@ -613,7 +658,7 @@ conditional_debt_concentration = conditional_debt_concentration.transpose()
 conditional_debt_concentration_percentage['OB50avg'] = conditional_debt_concentration.mean(axis=1)
 
 conditional_debt_concentration_percentage = conditional_debt_concentration_percentage.transpose()
-
+#print(conditional_debt_concentration_percentage.to_latex())
 ## conditional debt concentration on industry
 conditional_debt_concentration_industry = combined_dataset.copy()
 conditional_debt_concentration_industry = conditional_debt_concentration_industry[
@@ -838,6 +883,7 @@ which_firms_specialize['Revenue with constant'] = which_firms_specialize['Revenu
 which_firms_specialize['Assets with constant'] = which_firms_specialize['Total Assets USD'] + 1
 which_firms_specialize['Assets with constant'] = which_firms_specialize['Assets with constant'][
     which_firms_specialize['Assets with constant'] > 0]
+which_firms_specialize['CF Volatility'] = combined_dataset['CF Volatility']
 
 which_firms_specialize['Market Cap USD'] = which_firms_specialize['Market Cap USD'].drop_duplicates()
 which_firms_specialize['Net Income after Tax'] = which_firms_specialize['Net Income after Tax'].drop_duplicates()
@@ -850,16 +896,16 @@ spec_data_needed = pd.DataFrame()
 spec_data_needed['ln Size'] = np.log(which_firms_specialize['Assets with constant'])
 spec_data_needed['ln Sales'] = np.log(which_firms_specialize['Revenue with constant'])
 spec_data_needed['M/B'] = which_firms_specialize['Market Cap USD'] / which_firms_specialize['Total Assets USD']
-spec_data_needed['ROE'] = which_firms_specialize['ROE']
+spec_data_needed['Profitability'] = which_firms_specialize['Profitability']
 spec_data_needed['Dividend Payer'] = which_firms_specialize['Dividend Per Share - Mean'].apply(
     lambda x: 1 if x != 0 else 0)
-spec_data_needed['Cash Holdings'] = which_firms_specialize['Cash & Short Term Investments'] / which_firms_specialize[
-    'Total Assets USD']
-spec_data_needed['Tangibility'] = which_firms_specialize['PPE - Net Percentage of Total Assets']
+#spec_data_needed['Cash Holdings'] = which_firms_specialize['Cash & Short Term Investments'] / which_firms_specialize[
+#    'Total Assets USD']
+spec_data_needed['Tangibility'] = which_firms_specialize['PPE - Net Percentage of Total Assets'] / 100
 spec_data_needed['Book Leverage'] = which_firms_specialize['Debt - Total USD'] / which_firms_specialize[
     'Total Assets USD']
-spec_data_needed['CAPEX'] = which_firms_specialize['CAPEX Percentage of Total Assets']
-spec_data_needed['CAPEX'] = spec_data_needed['CAPEX'] / 100
+#spec_data_needed['CAPEX'] = which_firms_specialize['CAPEX Percentage of Total Assets']
+#spec_data_needed['CAPEX'] = spec_data_needed['CAPEX'] / 100
 spec_data_needed['Advertising'] = which_firms_specialize['Selling General & Administrative Expenses - Total'] / \
                                   which_firms_specialize['Total Assets USD']
 spec_data_needed['Instrument'] = which_firms_specialize['Instrument']
@@ -870,15 +916,15 @@ spec_data_needed = spec_data_needed.replace([np.inf, -np.inf], np.nan).dropna()
 spec_data_combined = pd.merge(spec_data_needed, combined_dataset, on=['Instrument', 'Date'])
 spec_data_combined.dropna(axis=0, inplace=True)
 
-spec_data_needed = spec_data_combined[['ln Size', 'ln Sales', 'M/B', 'ROE_x', 'Dividend Payer', 'Cash Holdings',
-                                       'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising', 'Instrument', 'Date',
-                                       'HHI', 'DS90 dummy']]
+spec_data_needed = spec_data_combined[['ln Size', 'ln Sales', 'M/B', 'Profitability_x', 'Dividend Payer',
+                                       'Tangibility','CF Volatility', 'Book Leverage',  'Advertising', 'Instrument', 'Date',
+                                       'HHI', 'DS90 dummy', 'Market Leverage']]
 # Correlation between variables
 rho = spec_data_needed.corr()
 pval = spec_data_needed.corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(*rho.shape)
 p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x <= t]))
 rho.round(2).astype(str) + p
-
+#print(rho.to_latex())
 spec_data_needed_sorted = spec_data_needed.sort_values('HHI')
 spec_data_needed_sorted['quartile'] = pd.qcut(spec_data_needed_sorted['HHI'], q=3,
                                               labels=['1st tertile', '2nd tertile', '3rd tertile'])
@@ -895,7 +941,7 @@ mean_median['Mean 1st T'] = spec_data_needed[spec_data_needed['1st T'] == 1].mea
 mean_median['Median 1st T'] = spec_data_needed[spec_data_needed['1st T'] == 1].median()
 mean_median['Mean 3rd T'] = spec_data_needed[spec_data_needed['3rd T'] == 1].mean()
 mean_median['Median 3rd T'] = spec_data_needed[spec_data_needed['3rd T'] == 1].median()
-
+print(mean_median.to_latex())
 # T-test between 1st and 4th quantile
 t_test_dataframe = spec_data_needed.drop(['Instrument', 'Date'], axis=1)
 exclude_cols = ['DS90 dummy', '1st T', '3rd T', 'HHI']
@@ -942,11 +988,11 @@ multivariate_merge.reset_index(inplace=True)
 multivariate_merge.drop(['HHI_x', 'Instrument', 'Date'], axis=1, inplace=True)
 multivariate_merge.dropna(inplace=True)
 multivariate_merge['M/B'] = winsorize(multivariate_merge['M/B'], limits=[0.01, 0.01])
-multivariate_merge['ROE_x'] = winsorize(multivariate_merge['ROE_x'], limits=[0.01, 0.01])
-multivariate_merge['Cash Holdings'] = winsorize(multivariate_merge['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge['Profitability_x'] = winsorize(multivariate_merge['Profitability_x'], limits=[0.01, 0.01])
+#multivariate_merge['Cash Holdings'] = winsorize(multivariate_merge['Cash Holdings'], limits=[0.01, 0.01])
 multivariate_merge['Tangibility'] = winsorize(multivariate_merge['Tangibility'], limits=[0.01, 0.01])
 multivariate_merge['Book Leverage'] = winsorize(multivariate_merge['Book Leverage'], limits=[0.01, 0.01])
-multivariate_merge['CAPEX'] = winsorize(multivariate_merge['CAPEX'], limits=[0.01, 0.01])
+#multivariate_merge['CAPEX'] = winsorize(multivariate_merge['CAPEX'], limits=[0.01, 0.01])
 multivariate_merge['Advertising'] = winsorize(multivariate_merge['Advertising'], limits=[0.01, 0.01])
 
 Y = multivariate_merge['HHI_y'].fillna(0)
@@ -975,11 +1021,11 @@ dummies_NAICS = pd.get_dummies(multivariate_merge1['NAICS Sector Code'])
 multivariate_merge1 = pd.concat([multivariate_merge1, dummies_NAICS], axis=1)
 multivariate_merge1.drop(['NAICS Sector Code'], axis=1, inplace=True)
 multivariate_merge1['M/B'] = winsorize(multivariate_merge1['M/B'], limits=[0.01, 0.01])
-multivariate_merge1['ROE_x'] = winsorize(multivariate_merge1['ROE_x'], limits=[0.01, 0.01])
-multivariate_merge1['Cash Holdings'] = winsorize(multivariate_merge1['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge1['Profitability_x'] = winsorize(multivariate_merge1['Profitability_x'], limits=[0.01, 0.01])
+#multivariate_merge1['Cash Holdings'] = winsorize(multivariate_merge1['Cash Holdings'], limits=[0.01, 0.01])
 multivariate_merge1['Tangibility'] = winsorize(multivariate_merge1['Tangibility'], limits=[0.01, 0.01])
 multivariate_merge1['Book Leverage'] = winsorize(multivariate_merge1['Book Leverage'], limits=[0.01, 0.01])
-multivariate_merge1['CAPEX'] = winsorize(multivariate_merge1['CAPEX'], limits=[0.01, 0.01])
+#multivariate_merge1['CAPEX'] = winsorize(multivariate_merge1['CAPEX'], limits=[0.01, 0.01])
 multivariate_merge1['Advertising'] = winsorize(multivariate_merge1['Advertising'], limits=[0.01, 0.01])
 
 
@@ -1010,11 +1056,11 @@ dummies_country = pd.get_dummies(multivariate_merge2['Country of Exchange'])
 multivariate_merge2 = pd.concat([multivariate_merge2, dummies_country], axis=1)
 multivariate_merge2.drop(['Country of Exchange'], axis=1, inplace=True)
 multivariate_merge2['M/B'] = winsorize(multivariate_merge2['M/B'], limits=[0.01, 0.01])
-multivariate_merge2['ROE_x'] = winsorize(multivariate_merge2['ROE_x'], limits=[0.01, 0.01])
-multivariate_merge2['Cash Holdings'] = winsorize(multivariate_merge2['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge2['Profitability_x'] = winsorize(multivariate_merge2['Profitability_x'], limits=[0.01, 0.01])
+#multivariate_merge2['Cash Holdings'] = winsorize(multivariate_merge2['Cash Holdings'], limits=[0.01, 0.01])
 multivariate_merge2['Tangibility'] = winsorize(multivariate_merge2['Tangibility'], limits=[0.01, 0.01])
 multivariate_merge2['Book Leverage'] = winsorize(multivariate_merge2['Book Leverage'], limits=[0.01, 0.01])
-multivariate_merge2['CAPEX'] = winsorize(multivariate_merge2['CAPEX'], limits=[0.01, 0.01])
+#multivariate_merge2['CAPEX'] = winsorize(multivariate_merge2['CAPEX'], limits=[0.01, 0.01])
 multivariate_merge2['Advertising'] = winsorize(multivariate_merge2['Advertising'], limits=[0.01, 0.01])
 
 
@@ -1046,11 +1092,11 @@ dummies_year = pd.get_dummies(multivariate_merge3['Date'])
 multivariate_merge3 = pd.concat([multivariate_merge3, dummies_year], axis=1)
 multivariate_merge3.drop(['Date'], axis=1, inplace=True)
 multivariate_merge3['M/B'] = winsorize(multivariate_merge3['M/B'], limits=[0.01, 0.01])
-multivariate_merge3['ROE_x'] = winsorize(multivariate_merge3['ROE_x'], limits=[0.01, 0.01])
-multivariate_merge3['Cash Holdings'] = winsorize(multivariate_merge3['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge3['Profitability_x'] = winsorize(multivariate_merge3['Profitability_x'], limits=[0.01, 0.01])
+#multivariate_merge3['Cash Holdings'] = winsorize(multivariate_merge3['Cash Holdings'], limits=[0.01, 0.01])
 multivariate_merge3['Tangibility'] = winsorize(multivariate_merge3['Tangibility'], limits=[0.01, 0.01])
 multivariate_merge3['Book Leverage'] = winsorize(multivariate_merge3['Book Leverage'], limits=[0.01, 0.01])
-multivariate_merge3['CAPEX'] = winsorize(multivariate_merge3['CAPEX'], limits=[0.01, 0.01])
+#multivariate_merge3['CAPEX'] = winsorize(multivariate_merge3['CAPEX'], limits=[0.01, 0.01])
 multivariate_merge3['Advertising'] = winsorize(multivariate_merge3['Advertising'], limits=[0.01, 0.01])
 
 
@@ -1065,10 +1111,11 @@ print(dg.acorr_breusch_godfrey(multivariate_reg_res3, nlags=20))
 
 ## Multivariate analysis with year and industry fixed effects for HHI
 multivariate_reg4 = spec_data_needed.copy()
-multivariate_reg4 = multivariate_reg4.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales', 'DS90 dummy'], axis=1)
-multivariate_reg4 = pd.merge(multivariate_reg4, which_firms_specialize[['NAICS Sector Code', 'Instrument', 'Date']], how='left',
+multivariate_reg4 = multivariate_reg4.drop(['1st T', '3rd T', 'ln Sales', 'DS90 dummy', 'Market Leverage'], axis=1)
+multivariate_reg4 = pd.merge(multivariate_reg4, which_firms_specialize[['NAICS Sector Code', 'Instrument', 'Date', 'Country of Exchange']], how='left',
                             on=['Instrument', 'Date'])
 multivariate_reg4['Date'] = multivariate_reg4['Date'].dt.year
+multivariate_reg4 = multivariate_reg4[multivariate_reg4['Country of Exchange'] != 'Norway']
 ##lagging
 multivariate_reg4.set_index(['Date', 'Instrument'], inplace=True)
 shifted = multivariate_reg4.groupby(level='Instrument').shift(-1)
@@ -1077,22 +1124,23 @@ multivariate_merge4 = pd.merge(multivariate_reg4, shifted['HHI'], left_index=Tru
 multivariate_merge4.reset_index(inplace=True)
 multivariate_merge4.drop(['HHI_x', 'Instrument'], axis=1, inplace=True)
 multivariate_merge4.dropna(inplace=True)
-#dummies_country = pd.get_dummies(multivariate_merge4['Country of Exchange'])
+dummies_country = pd.get_dummies(multivariate_merge4['Country of Exchange'])
 dummies_NAICS = pd.get_dummies(multivariate_merge4['NAICS Sector Code'])
 dummies_year = pd.get_dummies(multivariate_merge4['Date'])
-multivariate_merge4 = pd.concat([multivariate_merge4, dummies_NAICS, dummies_year], axis=1)
-multivariate_merge4.drop(['NAICS Sector Code', 'Date'], axis=1, inplace=True)
+multivariate_merge4 = pd.concat([multivariate_merge4, dummies_NAICS, dummies_year, dummies_country], axis=1)
+multivariate_merge4.drop(['NAICS Sector Code', 'Date', 'Country of Exchange'], axis=1, inplace=True)
 multivariate_merge4['M/B'] = winsorize(multivariate_merge4['M/B'], limits=[0.01, 0.01])
-multivariate_merge4['ROE_x'] = winsorize(multivariate_merge4['ROE_x'], limits=[0.01, 0.01])
-multivariate_merge4['Cash Holdings'] = winsorize(multivariate_merge4['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge4['Profitability_x'] = winsorize(multivariate_merge4['Profitability_x'], limits=[0.01, 0.01])
 multivariate_merge4['Tangibility'] = winsorize(multivariate_merge4['Tangibility'], limits=[0.01, 0.01])
-multivariate_merge4['Book Leverage'] = winsorize(multivariate_merge4['Book Leverage'], limits=[0.01, 0.01])
-multivariate_merge4['CAPEX'] = winsorize(multivariate_merge4['CAPEX'], limits=[0.01, 0.01])
+multivariate_merge4['CF Volatility'] = winsorize(multivariate_merge4['CF Volatility'], limits=[0.01, 0.01])
 multivariate_merge4['Advertising'] = winsorize(multivariate_merge4['Advertising'], limits=[0.01, 0.01])
+multivariate_merge4['Book Leverage'] = winsorize(multivariate_merge4['Book Leverage'], limits=[0.01, 0.01])
+
+
 
 
 Y = multivariate_merge4['HHI_y'].fillna(0)
-X = multivariate_merge4.drop(['HHI_y', '62', 2020], axis=1).fillna(0)
+X = multivariate_merge4.drop(['HHI_y', '62', 2020, 'Finland'], axis=1).fillna(0)
 
 X = sm.add_constant(X)
 multivariate_reg4 = sm.OLS(Y, X)
@@ -1102,7 +1150,7 @@ print(multivariate_reg_res4.summary())
 ## Multivariate analysis with year and industry fixed effects for HHI
 multivariate_reg5 = spec_data_needed.copy()
 multivariate_reg5 = multivariate_reg5.drop(['1st T', '3rd T', 'Dividend Payer', 'ln Sales', 'DS90 dummy'], axis=1)
-multivariate_reg5 = pd.merge(multivariate_reg5, which_firms_specialize[['NAICS Sector Code', 'Instrument', 'Date']], how='left',
+multivariate_reg5 = pd.merge(multivariate_reg5, which_firms_specialize[['NAICS Sector Code', 'Instrument', 'Date', 'Country of Exchange']], how='left',
                              on=['Instrument', 'Date'])
 multivariate_reg5['Date'] = multivariate_reg5['Date'].dt.year
 ##lagging
@@ -1113,20 +1161,20 @@ multivariate_merge5 = pd.merge(multivariate_reg5, shifted['HHI'], left_index=Tru
 multivariate_merge5.reset_index(inplace=True)
 multivariate_merge5.drop(['HHI_x', 'Instrument'], axis=1, inplace=True)
 multivariate_merge5.dropna(inplace=True)
-#dummies_country = pd.get_dummies(multivariate_merge5['Country of Exchange'])
+dummies_country = pd.get_dummies(multivariate_merge5['Country of Exchange'])
 dummies_NAICS = pd.get_dummies(multivariate_merge5['NAICS Sector Code'])
 dummies_year = pd.get_dummies(multivariate_merge5['Date'])
-multivariate_merge5 = pd.concat([multivariate_merge5, dummies_NAICS, dummies_year], axis=1)
-#multivariate_merge5 = pd.concat([multivariate_merge5, dummies_NAICS, dummies_year, dummies_country], axis=1)
-#multivariate_merge5.drop(['NAICS Sector Code', 'Date', 'Country of Exchange'], axis=1, inplace=True)
-multivariate_merge5.drop(['NAICS Sector Code', 'Date'], axis=1, inplace=True)
+#multivariate_merge5 = pd.concat([multivariate_merge5, dummies_NAICS, dummies_year], axis=1)
+multivariate_merge5 = pd.concat([multivariate_merge5, dummies_NAICS, dummies_year, dummies_country], axis=1)
+multivariate_merge5.drop(['NAICS Sector Code', 'Date', 'Country of Exchange','Advertising', 'Book Leverage'], axis=1, inplace=True)
+#multivariate_merge5.drop(['NAICS Sector Code', 'Date'], axis=1, inplace=True)
 multivariate_merge5['M/B'] = winsorize(multivariate_merge5['M/B'], limits=[0.01, 0.01])
-multivariate_merge5['ROE_x'] = winsorize(multivariate_merge5['ROE_x'], limits=[0.001, 0.001])
-multivariate_merge5['Cash Holdings'] = winsorize(multivariate_merge5['Cash Holdings'], limits=[0.01, 0.01])
+multivariate_merge5['Profitability_x'] = winsorize(multivariate_merge5['Profitability_x'], limits=[0.001, 0.001])
+#multivariate_merge5['Cash Holdings'] = winsorize(multivariate_merge5['Cash Holdings'], limits=[0.01, 0.01])
 multivariate_merge5['Tangibility'] = winsorize(multivariate_merge5['Tangibility'], limits=[0.001, 0.001])
-multivariate_merge5['Book Leverage'] = winsorize(multivariate_merge5['Book Leverage'], limits=[0.001, 0.001])
-multivariate_merge5['CAPEX'] = winsorize(multivariate_merge5['CAPEX'], limits=[0.001, 0.001])
-multivariate_merge5['Advertising'] = winsorize(multivariate_merge5['Advertising'], limits=[0.001, 0.001])
+#multivariate_merge5['Book Leverage'] = winsorize(multivariate_merge5['Book Leverage'], limits=[0.001, 0.001])
+#multivariate_merge5['CAPEX'] = winsorize(multivariate_merge5['CAPEX'], limits=[0.001, 0.001])
+#multivariate_merge5['Advertising'] = winsorize(multivariate_merge5['Advertising'], limits=[0.001, 0.001])
 
 
 Y = multivariate_merge5['HHI_y'].fillna(0)
@@ -1148,8 +1196,8 @@ for idx, val in enumerate(counts.index):
     print(f"{val}: {count} ({percentage:.2f}%)")
 ################### regression country specific ##############
 for country in combined_dataset['Country of Exchange'].unique():
-    globals()[f"spec_data_{country}"] = spec_data_combined[['ln Size', 'M/B', 'ROE_x', 'Cash Holdings',
-                                              'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising', 'Instrument',
+    globals()[f"spec_data_{country}"] = spec_data_combined[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility',
+                                              'Tangibility', 'Book Leverage', 'Advertising', 'Instrument',
                                               'Date', 'HHI', 'DS90 dummy', 'Country of Exchange', 'NAICS Sector Code']]
     globals()[f"spec_data_{country}"]['Date'] = globals()[f"spec_data_{country}"]['Date'].dt.year
     globals()[f"spec_data_{country}"] = globals()[f"spec_data_{country}"][globals()[f"spec_data_{country}"]['Country of Exchange'] == country]
@@ -1166,19 +1214,20 @@ for country in combined_dataset['Country of Exchange'].unique():
     globals()[f"spec_data_{country}_merged"].drop(['NAICS Sector Code', 'Date'], axis=1, inplace=True)
     globals()[f"spec_data_{country}_merged"].dropna(inplace=True)
     globals()[f"spec_data_{country}_merged"]['M/B'] = winsorize(globals()[f"spec_data_{country}_merged"]['M/B'], limits=[0.01, 0.01])
-    globals()[f"spec_data_{country}_merged"]['ROE_x'] = winsorize(globals()[f"spec_data_{country}_merged"]['ROE_x'], limits=[0.001, 0.001])
-    globals()[f"spec_data_{country}_merged"]['Cash Holdings'] = winsorize(globals()[f"spec_data_{country}_merged"]['Cash Holdings'], limits=[0.01, 0.01])
+    globals()[f"spec_data_{country}_merged"]['Profitability_x'] = winsorize(globals()[f"spec_data_{country}_merged"]['Profitability_x'], limits=[0.001, 0.001])
+    globals()[f"spec_data_{country}_merged"]['CF Volatility'] = winsorize(globals()[f"spec_data_{country}_merged"]['CF Volatility'], limits=[0.01, 0.01])
     globals()[f"spec_data_{country}_merged"]['Tangibility'] = winsorize(globals()[f"spec_data_{country}_merged"]['Tangibility'], limits=[0.001, 0.001])
     globals()[f"spec_data_{country}_merged"]['Book Leverage'] = winsorize(globals()[f"spec_data_{country}_merged"]['Book Leverage'], limits=[0.001, 0.001])
-    globals()[f"spec_data_{country}_merged"]['CAPEX'] = winsorize(globals()[f"spec_data_{country}_merged"]['CAPEX'], limits=[0.001, 0.001])
+    #globals()[f"spec_data_{country}_merged"]['CAPEX'] = winsorize(globals()[f"spec_data_{country}_merged"]['CAPEX'], limits=[0.001, 0.001])
     globals()[f"spec_data_{country}_merged"]['Advertising'] = winsorize(globals()[f"spec_data_{country}_merged"]['Advertising'], limits=[0.001, 0.001])
 
     Y = globals()[f"spec_data_{country}_merged"]['HHI_y']
-    X = globals()[f"spec_data_{country}_merged"].drop(globals()[f"spec_data_{country}_merged"].columns[[8, 9, -1]], axis=1)
+    X = globals()[f"spec_data_{country}_merged"].drop(globals()[f"spec_data_{country}_merged"].columns[[7, 8, -1]], axis=1)
     X = sm.add_constant(X)
     globals()[f"spec_reg_{country}"] = sm.OLS(Y, X).fit(cov_type="HC0")
     print(f"Regression for {country}")
     print(globals()[f"spec_reg_{country}"].summary())
+
 # checking VIF for country specific regression in the same loop
     Y = globals()[f"spec_data_{country}_merged"]['HHI_y']
     X = globals()[f"spec_data_{country}_merged"].drop(globals()[f"spec_data_{country}_merged"].columns[[8, 9, -1]], axis=1)
@@ -1304,7 +1353,8 @@ for col in norway.columns:
 
 ### Industry differentiated debt specialization with threshold
 industry_debt_specialization = combined_dataset.copy()
-thresholds = [0.3, 0.6, 0.9, 0.99]
+#thresholds = [0.3, 0.6, 0.9, 0.99]
+thresholds = [0.99]
 percentages_industry_debt_specialization_naics = pd.DataFrame()
 exclude_naics = ['55', '81', '61']
 for naics in industry_debt_specialization['NAICS Sector Code'].unique():
@@ -1327,7 +1377,7 @@ for naics in industry_debt_specialization['NAICS Sector Code'].unique():
             percentage = (industry_debt_specialization_naics[col] >= threshold).mean() * 100
             threshold_dict[f'{col}_percentage'] = percentage
         percentages_industry_debt_specialization_naics = percentages_industry_debt_specialization_naics.append(threshold_dict, ignore_index=True)
-
+print(percentages_industry_debt_specialization_naics.to_latex())
 
 
 
@@ -1382,7 +1432,7 @@ ind_country_table['% Denmark'] = combined_dataset[combined_dataset['Country of E
 ind_country_table['% Finland'] = combined_dataset[combined_dataset['Country of Exchange'] == 'Finland'][
                                      'NAICS Sector Code'].value_counts() / ind_country_table['Total observations']
 ind_country_table.fillna(0, inplace=True)
-
+print(ind_country_table.to_latex())
 ####### tabell med avg av naicskoders hhi
 enavgtabell = combined_dataset[['NAICS Sector Code', 'HHI']]
 #enavgtabell['NAICS Sector Code'] = enavgtabell['NAICS Sector Code'].apply(lambda x: (int(x)))
@@ -1398,29 +1448,54 @@ grouped_counts = combined_dataset.groupby('NAICS Industry Group Code').size().re
 enavgtabell = enavgtabell.merge(grouped_counts, on='NAICS Industry Group Code')
 
 ######## summary statistics tabell for variablene
-summary_statistics = spec_data_combined[['ln Size', 'ln Sales', 'M/B', 'ROE_x', 'Dividend Payer', 'Cash Holdings', 'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising']]
+summary_statistics = spec_data_combined[['ln Size', 'ln Sales', 'M/B', 'Profitability_x', 'Dividend Payer', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising', 'Market Leverage']]
 summary_statistics['M/B'] = winsorize(summary_statistics['M/B'], limits=[0.01, 0.01])
-summary_statistics['ROE_x'] = winsorize(summary_statistics['ROE_x'], limits=[0.001, 0.001])
-summary_statistics['Cash Holdings'] = winsorize(summary_statistics['Cash Holdings'], limits=[0.01, 0.01])
+summary_statistics['Profitability_x'] = winsorize(summary_statistics['Profitability_x'], limits=[0.01, 0.01])
+summary_statistics['CF Volatility'] = winsorize(summary_statistics['CF Volatility'], limits=[0.01, 0.01])
 summary_statistics['Tangibility'] = winsorize(summary_statistics['Tangibility'], limits=[0.01, 0.01])
-summary_statistics['Book Leverage'] = winsorize(summary_statistics['Book Leverage'], limits=[0.001, 0.001])
-summary_statistics['CAPEX'] = winsorize(summary_statistics['CAPEX'], limits=[0.001, 0.001])
-summary_statistics['Advertising'] = winsorize(summary_statistics['Advertising'], limits=[0.001, 0.001])
+summary_statistics['Book Leverage'] = winsorize(summary_statistics['Book Leverage'], limits=[0.01, 0.01])
+summary_statistics['Market Leverage'] = winsorize(summary_statistics['Market Leverage'], limits=[0.01, 0.01])
+
+#summary_statistics['CAPEX'] = winsorize(summary_statistics['CAPEX'], limits=[0.001, 0.001])
+summary_statistics['Advertising'] = winsorize(summary_statistics['Advertising'], limits=[0.01, 0.01])
 summary_statistics = summary_statistics.transpose()
 
 summary_statistics_table = pd.DataFrame()
 summary_statistics_table['Mean'] = summary_statistics.mean(axis=1)
 summary_statistics_table['Median'] = summary_statistics.median(axis=1)
 summary_statistics_table['SE'] = summary_statistics.std(axis=1)
-summary_statistics_table['5% Lowest'] = summary_statistics.quantile(0.05, axis=1)
-summary_statistics_table['95% Highest'] = summary_statistics.quantile(0.95, axis=1)
+summary_statistics_table['25% Lowest'] = summary_statistics.quantile(0.25, axis=1)
+summary_statistics_table['75% Highest'] = summary_statistics.quantile(0.75, axis=1)
 summary_statistics_table['Min'] = summary_statistics.min(axis=1)
 summary_statistics_table['Max'] = summary_statistics.max(axis=1)
+print(summary_statistics_table.to_latex())
+## summary statistic for all countries with variables
 
+ss_allcountries_table_df = pd.DataFrame()
+for country in spec_data_combined['Country of Exchange'].unique():
+    ss_allcountries_table = []
+    summary_statistics_allcountries_table = pd.DataFrame()
+    summary_statistics_allcountries = spec_data_combined[spec_data_combined['Country of Exchange'] == country][['ln Size', 'ln Sales', 'M/B', 'Profitability_x', 'Dividend Payer', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising']]
+    summary_statistics_allcountries['M/B'] = winsorize(summary_statistics_allcountries['M/B'], limits=[0.01, 0.01])
+    summary_statistics_allcountries['Profitability_x'] = winsorize(summary_statistics_allcountries['Profitability_x'], limits=[0.01, 0.01])
+    summary_statistics_allcountries['CF Volatility'] = winsorize(summary_statistics_allcountries['CF Volatility'], limits=[0.01, 0.01])
+    summary_statistics_allcountries['Tangibility'] = winsorize(summary_statistics_allcountries['Tangibility'], limits=[0.01, 0.01])
+    summary_statistics_allcountries['Book Leverage'] = winsorize(summary_statistics_allcountries['Book Leverage'], limits=[0.01, 0.01])
+    summary_statistics_allcountries['Advertising'] = winsorize(summary_statistics_allcountries['Advertising'], limits=[0.01, 0.01])
+    summary_statistics_allcountries = summary_statistics_allcountries.transpose()
+    mean = summary_statistics_allcountries.mean(axis=1)
+    median = summary_statistics_allcountries.median(axis=1)
+    ss_allcountries_table.append(f'{mean}_{country}, {median}_{country}')
+    ss_allcountries_table_df[f'Mean_{country}'] = mean
+    ss_allcountries_table_df[f'Median_{country}'] = median
+#print(ss_allcountries_table_df.to_latex())
+
+    summary_statistics_allcountries_table['Mean'] = summary_statistics_allcountries.mean(axis=1)
+    summary_statistics_allcountries_table['Median'] = summary_statistics_allcountries.median(axis=1)
 ## Autocorrelation test Breusch-Godfrey
 data = spec_data_needed.copy()
 data.loc[:, 'HHI'] = ct.add_constant(data)
-ivar = ['ln Size', 'M/B', 'ROE_x', 'Cash Holdings', 'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising']
+ivar = ['ln Size', 'M/B', 'Profitability_x', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising']
 import statsmodels.regression.linear_model as rg
 reg = rg.OLS(data['HHI'], data[ivar], hasconst=bool).fit()
 print('test stat:', np.round(dg.acorr_breusch_godfrey(reg, nlags=20) [0], 6))
@@ -1434,7 +1509,7 @@ data = spec_data_needed.copy()
 y = data['HHI']
 
 #define predictor variables
-x = data[['ln Size', 'M/B', 'ROE_x', 'Cash Holdings', 'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising']]
+x = data[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising']]
 
 #add constant to predictor variables
 x = sm.add_constant(x)
@@ -1453,8 +1528,11 @@ print(dict(zip(labels, white_test)))
 ## statistikk tabell for naics sector
 industry_statistic = combined_dataset.copy()
 industry_statistic_df = pd.DataFrame()
+industry_statistic_result = pd.DataFrame()
 
 for naics in industry_statistic['NAICS Sector Code'].unique():
+    if naics in exclude_naics:
+        continue
     industry_statistic_naics = industry_statistic[industry_statistic['NAICS Sector Code'] == naics]
     industry_statistic_naics['Other Borrowings/Total Debt'] = industry_statistic_naics['Other Borrowings/Total Debt'] + industry_statistic_naics['Trust Preferred/Total Debt']
     industry_statistic_naics = industry_statistic_naics.drop('Trust Preferred/Total Debt', axis=1)
@@ -1470,8 +1548,8 @@ for naics in industry_statistic['NAICS Sector Code'].unique():
     for col in industry_statistic_naics.columns:
         percentage = industry_statistic_naics[col].mean() * 100
         naics_dict[f'{col}_percentage'] = percentage
-    industry_statistic_df = industry_statistic_df.append(naics_dict, ignore_index=True)
-
+    industry_statistic_result = industry_statistic_result.append(naics_dict, ignore_index=True)
+print(industry_statistic_result.to_latex())
 ## same for country
 country_statistic = combined_dataset.copy()
 country_statistic_df = pd.DataFrame()
@@ -1493,27 +1571,30 @@ for country in country_statistic['Country of Exchange'].unique():
         percentage = country_statistic_naics[col].mean() * 100
         country_dict[f'{col}_percentage'] = percentage
     country_statistic_df = country_statistic_df.append(country_dict, ignore_index=True)
-
+print(country_statistic_df.to_latex())
 ## statistikk for naics sector  med gjenonnomsnitt til ulike firm characteristics
 industry_statistic = spec_data_combined.copy()
 industry_statistic_df = pd.DataFrame()
 
 for naics in industry_statistic['NAICS Sector Code'].unique():
+    if naics in exclude_naics:
+        continue
     industry_statistic_naics = industry_statistic[industry_statistic['NAICS Sector Code'] == naics]
-    industry_statistic_naics = industry_statistic_naics[['ln Size', 'ln Sales', 'M/B', 'ROE_x', 'Dividend Payer', 'Cash Holdings',
-                                           'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising', 'HHI']].dropna()
+    industry_statistic_naics = industry_statistic_naics[['ln Size', 'ln Sales', 'M/B', 'Profitability_x', 'Dividend Payer', 'CF Volatility',
+                                           'Tangibility', 'Book Leverage', 'Advertising', 'HHI']].dropna()
 
     naics_dict = {}
     for col in industry_statistic_naics.columns:
         percentage = industry_statistic_naics[col].mean()
-        naics_dict[f'{col}_percentage'] = percentage
+        naics_dict[f'{col}'] = percentage
     industry_statistic_df = industry_statistic_df.append(naics_dict, ignore_index=True)
 industry_statistic_df = industry_statistic_df.transpose()
+print(industry_statistic_df.to_latex())
 
 ################### regression industry specific ##############
 for industry in combined_dataset['NAICS Sector Code'].unique():
-    globals()[f"spec_data_{industry}"] = spec_data_combined[['ln Size', 'M/B', 'ROE_x', 'Cash Holdings',
-                                              'Tangibility', 'Book Leverage', 'CAPEX', 'Advertising', 'Instrument',
+    globals()[f"spec_data_{industry}"] = spec_data_combined[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility',
+                                              'Tangibility', 'Book Leverage', 'Advertising', 'Instrument',
                                               'Date', 'HHI', 'DS90 dummy', 'NAICS Sector Code']]
     globals()[f"spec_data_{industry}"]['Date'] = globals()[f"spec_data_{industry}"]['Date'].dt.year
     globals()[f"spec_data_{industry}"] = globals()[f"spec_data_{industry}"][globals()[f"spec_data_{industry}"]['NAICS Sector Code'] == industry]
@@ -1530,11 +1611,11 @@ for industry in combined_dataset['NAICS Sector Code'].unique():
     globals()[f"spec_data_{industry}_merged"].drop(['Date'], axis=1, inplace=True)
     globals()[f"spec_data_{industry}_merged"].dropna(inplace=True)
     globals()[f"spec_data_{industry}_merged"]['M/B'] = winsorize(globals()[f"spec_data_{industry}_merged"]['M/B'], limits=[0.01, 0.01])
-    globals()[f"spec_data_{industry}_merged"]['ROE_x'] = winsorize(globals()[f"spec_data_{industry}_merged"]['ROE_x'], limits=[0.001, 0.001])
-    globals()[f"spec_data_{industry}_merged"]['Cash Holdings'] = winsorize(globals()[f"spec_data_{industry}_merged"]['Cash Holdings'], limits=[0.01, 0.01])
+    globals()[f"spec_data_{industry}_merged"]['Profitability_x'] = winsorize(globals()[f"spec_data_{industry}_merged"]['Profitability_x'], limits=[0.001, 0.001])
+    globals()[f"spec_data_{industry}_merged"]['CF Volatility'] = winsorize(globals()[f"spec_data_{industry}_merged"]['CF Volatility'], limits=[0.01, 0.01])
     globals()[f"spec_data_{industry}_merged"]['Tangibility'] = winsorize(globals()[f"spec_data_{industry}_merged"]['Tangibility'], limits=[0.001, 0.001])
     globals()[f"spec_data_{industry}_merged"]['Book Leverage'] = winsorize(globals()[f"spec_data_{industry}_merged"]['Book Leverage'], limits=[0.001, 0.001])
-    globals()[f"spec_data_{industry}_merged"]['CAPEX'] = winsorize(globals()[f"spec_data_{industry}_merged"]['CAPEX'], limits=[0.001, 0.001])
+    #globals()[f"spec_data_{industry}_merged"]['CAPEX'] = winsorize(globals()[f"spec_data_{industry}_merged"]['CAPEX'], limits=[0.001, 0.001])
     globals()[f"spec_data_{industry}_merged"]['Advertising'] = winsorize(globals()[f"spec_data_{industry}_merged"]['Advertising'], limits=[0.001, 0.001])
 
     Y = globals()[f"spec_data_{industry}_merged"]['HHI_y']

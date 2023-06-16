@@ -44,8 +44,14 @@ datatest, _ = ek.get_data(list1, fields=['TR.IR.Rating'],
 datatest2, _ = ek.get_data(list2, fields=['TR.IssuerRating', 'TR.FiFitchsRating', 'TR.FiMoodysRating', 'TR.FiSPRating'],
                      parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY",})
 
+df8, _ = ek.get_data(list1, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.OpProfBefNonRecurIncExpn'],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
+df9, _ = ek.get_data(list2, fields=['TR.F.STDebtCurrPortOfLTDebt.date', 'TR.F.OpProfBefNonRecurIncExpn'],
+                     parameters={'SDate': '2001-01-01', 'EDate': '2023-12-31', "Frq": "FY", 'Curn': 'USD'})
 
 ### Store data to csv file
 df6.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\which_firms_specialize.csv", index=False)
 df7.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\which_firms_specialize2.csv", index=False)
 assetsusd.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\assetsusd.csv", index=False)
+df8.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\operating_profit.csv", index=False)
+df9.to_csv(r"C:\\Users\\morte\\PycharmProjects\\Master\\operating_profit2.csv", index=False)
