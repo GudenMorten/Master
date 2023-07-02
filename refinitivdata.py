@@ -1197,7 +1197,7 @@ for idx, val in enumerate(counts.index):
 ################### regression country specific ##############
 for country in combined_dataset['Country of Exchange'].unique():
     globals()[f"spec_data_{country}"] = spec_data_combined[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility',
-                                              'Tangibility', 'Book Leverage', 'Advertising', 'Instrument',
+                                              'Tangibility', 'Book Leverage', 'Dividend Payer', 'Advertising', 'Instrument',
                                               'Date', 'HHI', 'DS90 dummy', 'Country of Exchange', 'NAICS Sector Code']]
     globals()[f"spec_data_{country}"]['Date'] = globals()[f"spec_data_{country}"]['Date'].dt.year
     globals()[f"spec_data_{country}"] = globals()[f"spec_data_{country}"][globals()[f"spec_data_{country}"]['Country of Exchange'] == country]
@@ -1222,7 +1222,7 @@ for country in combined_dataset['Country of Exchange'].unique():
     globals()[f"spec_data_{country}_merged"]['Advertising'] = winsorize(globals()[f"spec_data_{country}_merged"]['Advertising'], limits=[0.001, 0.001])
 
     Y = globals()[f"spec_data_{country}_merged"]['HHI_y']
-    X = globals()[f"spec_data_{country}_merged"].drop(globals()[f"spec_data_{country}_merged"].columns[[7, 8, -1]], axis=1)
+    X = globals()[f"spec_data_{country}_merged"].drop(globals()[f"spec_data_{country}_merged"].columns[[8, 9, -1]], axis=1)
     X = sm.add_constant(X)
     globals()[f"spec_reg_{country}"] = sm.OLS(Y, X).fit(cov_type="HC0")
     print(f"Regression for {country}")
@@ -1509,7 +1509,7 @@ data = spec_data_needed.copy()
 y = data['HHI']
 
 #define predictor variables
-x = data[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising']]
+x = data[['ln Size', 'M/B', 'Profitability_x', 'CF Volatility', 'Tangibility', 'Book Leverage', 'Advertising', 'Dividend Payer']]
 
 #add constant to predictor variables
 x = sm.add_constant(x)
